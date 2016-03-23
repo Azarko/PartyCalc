@@ -1,18 +1,30 @@
 class FreakCore(object):
-    __freaks = []
     def_freak_name = "freak"
 
-    def __init__(self):
+    def __init__(self, verbose=True):
         self.each_pay = 0
+        self.freaks = []
+        self.each_pay = 0
+        self.verbose = verbose
 
-    # def __repr__(self):
-    #     string = []
-    #     if len(self.__freaks):
-    #         for freak in self.__freaks:
-    #             string.append("Freak %s with balance=%2.2f" % (freak.name, freak.balance))
-    #     else:
-    #         string.append("Freaks not found")
-    #     return "\n".join(string)
+    def print_freaks(self):
+        string = []
+        if len(self.freaks):
+            for freak in self.freaks:
+                string.append("Freak %s with balance=%2.2f" % (freak.name, freak.balance))
+        else:
+            string.append("Freaks nFot found")
+        print "\n".join(string)
+        # return "\n".join(string)
+
+    def print_freaks_payments(self):
+        string = []
+        if len(self.freaks):
+            for freak in self.freaks:
+                string.append("Freak %s need to pay %2.2f" % (freak.name, freak.need_to_pay))
+        else:
+            string.append("Freaks not found")
+        print "\n".join(string)
 
     def add_freak(self, name="", balance=0.0):
         if isinstance(balance, int):
@@ -29,11 +41,12 @@ class FreakCore(object):
                     break
                 name_index += 1
         if name in self.get_freak_names():
-            print "Freak with name %s already exist! Can't use same names!"
+            print "Freak with name %s already exist! Can't use same names!" % name
             return False
         else:
-            self.__freaks.append(Freak(name, balance))
-            print "Freak %s added." % name
+            self.freaks.append(Freak(name, balance))
+            if self.verbose:
+                print "Freak %s added." % name
         return True
 
     def delete_freak(self, name):
@@ -42,50 +55,61 @@ class FreakCore(object):
         :return: True if deleting success, False if deleting failed.
         """
 
-        if name in self.__freaks:
-            self.__freaks.pop(self.get_freak_index(name))
-            print "Freak %s deleted." % name
+        if name in self.get_freak_names():
+            self.freaks.pop(self.get_freak_index(name))
+            if self.verbose:
+                print "Freak %s deleted." % name
             return True
         else:
             print "Freak %s not found." % name
             return False
+
+    def delete_all_freaks(self):
+        self.freaks = []
+        self.each_pay = 0
 
     def get_freak_by_name(self, name):
         if name not in self.get_freak_names():
             print "Freak %s not found!" % name
             return False
         else:
-            return self.__freaks[self.get_freak_index(name)]
+            return self.freaks[self.get_freak_index(name)]
 
     def get_freak_index(self, name):
-        for freak in self.__freaks:
+        for freak in self.freaks:
             if freak.name == name:
-                return self.__freaks.index(freak)
+                return self.freaks.index(freak)
         return False
 
     def get_freak_names(self):
-        return sorted([freak.name for freak in self.__freaks])
+        return sorted([freak.name for freak in self.freaks])
 
     def set_freak_balance(self, name, balance):
         if name not in self.get_freak_names():
             print "Freak %s not found." % name
             return False
         else:
-            self.__freaks[self.get_freak_index(name)].set_balance(balance)
+            self.freaks[self.get_freak_index(name)].set_balance(balance)
+
+    def get_freak_balance(self, name):
+        if name not in self.get_freak_names():
+            print "Freak %s not found." % name
+            return False
+        else:
+            return self.freaks[self.get_freak_index(name)].balance
 
     def _calculate_total_sum(self):
         total_sum = 0
-        for freak in self.__freaks:
+        for freak in self.freaks:
             total_sum += freak.balance
         return total_sum
 
     def calculate_payments(self):
         total_sum = self._calculate_total_sum()
-        self.each_pay = total_sum / len(self.__freaks)
+        self.each_pay = total_sum / len(self.freaks)
         print "Every freak must pay %2.2f" % self.each_pay
-        for freak in self.__freaks:
+        for freak in self.freaks:
             freak.need_to_pay = self.each_pay - freak.balance
-            print freak.name, freak.need_to_pay
 
     def change_freak_name(self, name, new_name):
         if name not in self.get_freak_names():
@@ -97,9 +121,9 @@ class FreakCore(object):
                 return False
             else:
                 index = self.get_freak_index(name)
-                old = self.__freaks.pop(index)
-                self.__freaks.insert(index, old)
-                self.__freaks[index].change_name(new_name)
+                old = self.freaks.pop(index)
+                self.freaks.insert(index, old)
+                self.freaks[index].change_name(new_name)
                 del old, index
 
 
