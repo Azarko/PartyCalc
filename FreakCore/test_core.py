@@ -40,7 +40,7 @@ class TestCore(unittest.TestCase):
         self.assertEqual(calc.get_freak_names(), ["Mr.Black", "freak_1", "freak_2"])
         self.assertEqual(calc.get_freak_balance("Mr.Black"), 0)
         self.assertEqual(calc.get_freak_balance("freak_2"), 5)
-        calc.delete_all_freaks()
+        self.assertTrue(calc.delete_all_freaks())
         self.assertEqual(calc.get_freak_names(), [])
         b = 15
         for name in names:

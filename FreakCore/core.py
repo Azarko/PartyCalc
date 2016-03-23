@@ -2,15 +2,25 @@ class FreakCore(object):
     def_freak_name = "freak"
 
     def __init__(self, verbose=True):
+        """ Initialize of class.
+        :param verbose: True for show additional stdout. False - if needn't.
+        """
+
         self.each_pay = 0
-        self.freaks = []
+        self.__freaks = []
         self.each_pay = 0
         self.verbose = verbose
 
+    @property
+    def freaks(self):
+        return self.__freaks
+
     def print_freaks(self):
+        """ Print name and balance of each saved freak. """
+
         string = []
-        if len(self.freaks):
-            for freak in self.freaks:
+        if len(self.__freaks):
+            for freak in self.__freaks:
                 string.append("Freak %s with balance=%2.2f" % (freak.name, freak.balance))
         else:
             string.append("Freaks nFot found")
@@ -18,9 +28,11 @@ class FreakCore(object):
         # return "\n".join(string)
 
     def print_freaks_payments(self):
+        """ Print name and payment of each saved freak. """
+
         string = []
-        if len(self.freaks):
-            for freak in self.freaks:
+        if len(self.__freaks):
+            for freak in self.__freaks:
                 string.append("Freak %s need to pay %2.2f" % (freak.name, freak.need_to_pay))
         else:
             string.append("Freaks not found")
@@ -44,7 +56,7 @@ class FreakCore(object):
             print "Freak with name %s already exist! Can't use same names!" % name
             return False
         else:
-            self.freaks.append(Freak(name, balance))
+            self.__freaks.append(Freak(name, balance))
             if self.verbose:
                 print "Freak %s added." % name
         return True
@@ -56,7 +68,7 @@ class FreakCore(object):
         """
 
         if name in self.get_freak_names():
-            self.freaks.pop(self.get_freak_index(name))
+            self.__freaks.pop(self.get_freak_index(name))
             if self.verbose:
                 print "Freak %s deleted." % name
             return True
@@ -65,53 +77,93 @@ class FreakCore(object):
             return False
 
     def delete_all_freaks(self):
-        self.freaks = []
+        """ Delete all freaks.
+        :return: True
+        """
+
+        self.__freaks = []
         self.each_pay = 0
+        return True
 
     def get_freak_by_name(self, name):
+        """ Returns freak by selected name.
+        :param name: Name of freak.
+        :return: Freak obj or False if freak not found
+        """
+
         if name not in self.get_freak_names():
             print "Freak %s not found!" % name
             return False
         else:
-            return self.freaks[self.get_freak_index(name)]
+            return self.__freaks[self.get_freak_index(name)]
 
     def get_freak_index(self, name):
-        for freak in self.freaks:
+        """ Return index in class list of freak with selected name/
+
+        :param name: Name of freak.
+        :return: List index or False
+        """
+
+        for freak in self.__freaks:
             if freak.name == name:
-                return self.freaks.index(freak)
+                return self.__freaks.index(freak)
         return False
 
     def get_freak_names(self):
-        return sorted([freak.name for freak in self.freaks])
+        """ Return sorted list with freak names.
+        :return: Names of all freaks (sorted).
+        """
+
+        return sorted([freak.name for freak in self.__freaks])
 
     def set_freak_balance(self, name, balance):
+        """ Set to freak with selected name new balance. Old balance disappear.
+        :param name: Name of freak.
+        :param balance: New balance.
+        :return: False if something wrong, True if all ok.
+        """
+
         if name not in self.get_freak_names():
             print "Freak %s not found." % name
             return False
         else:
-            self.freaks[self.get_freak_index(name)].set_balance(balance)
+            self.__freaks[self.get_freak_index(name)].set_balance(balance)
 
     def get_freak_balance(self, name):
+        """ Return balance of freak with selected name.
+        :param name: Name of freak.
+        :return: Freak's balance or False.
+        """
+
         if name not in self.get_freak_names():
             print "Freak %s not found." % name
             return False
         else:
-            return self.freaks[self.get_freak_index(name)].balance
+            return self.__freaks[self.get_freak_index(name)].balance
 
     def _calculate_total_sum(self):
+        """ Return Total sum of all freak's balances.
+        :return: sum
+        """
+
         total_sum = 0
-        for freak in self.freaks:
+        for freak in self.__freaks:
             total_sum += freak.balance
         return total_sum
 
     def calculate_payments(self):
         total_sum = self._calculate_total_sum()
-        self.each_pay = total_sum / len(self.freaks)
+        self.each_pay = total_sum / len(self.__freaks)
         print "Every freak must pay %2.2f" % self.each_pay
-        for freak in self.freaks:
+        for freak in self.__freaks:
             freak.need_to_pay = self.each_pay - freak.balance
 
     def change_freak_name(self, name, new_name):
+        """ Change name of selected freak to new_name.
+        :param name: Old name of freak.
+        :param new_name: New name of freak. It can't be same with each one in existing list.
+        :return: False of something wrong, else True.
+        """
         if name not in self.get_freak_names():
             print "Freak %s not found!" % name
             return False
@@ -121,16 +173,23 @@ class FreakCore(object):
                 return False
             else:
                 index = self.get_freak_index(name)
-                old = self.freaks.pop(index)
-                self.freaks.insert(index, old)
-                self.freaks[index].change_name(new_name)
+                old = self.__freaks.pop(index)
+                self.__freaks.insert(index, old)
+                self.__freaks[index].change_name(new_name)
                 del old, index
+        return True
 
 
 class Freak(object):
+    """ Freak class. Contain base freak-unit. """
     def_freak_name = "freak"
 
     def __init__(self, name=def_freak_name, balance=0.0):
+        """ Initialize of class.
+        :param name: Name of freak.
+        :param balance: Default freak balance.
+        """
+
         self.__freak_name = name
         self.__freak_balance = 0.0
         self.set_balance(balance)
@@ -145,13 +204,22 @@ class Freak(object):
         return self.__freak_balance
 
     def set_balance(self, balance):
+        """ Set new balance.
+        :param balance: New balance (int or float).
+        :return:  False if all ok, else True.
+        """
+
         if isinstance(balance, int):
             balance = float(balance)
         if isinstance(balance, float):
             self.__freak_balance = balance
-            return True
-        else:
             return False
+        else:
+            return True
 
     def change_name(self, new_name):
+        """ Change freak name to new_name.
+        :param new_name: New name for freak.
+        """
+
         self.__freak_name = new_name
