@@ -76,6 +76,16 @@ class FreakCore(object):
             print "Freak %s not found." % name
             return False
 
+    def delete_freak_by_index(self, index):
+        if 0 <= index < len(self.__freaks):
+            name = self.__freaks.pop(index).name
+            if self.verbose:
+                print "Freak %d(%s) deleted." % (index, name)
+            return True
+        else:
+            print "Invalid index: %d." % index
+            return False
+
     def delete_all_freaks(self):
         """ Delete all freaks.
         :return: True
@@ -114,7 +124,14 @@ class FreakCore(object):
         :return: Names of all freaks (sorted).
         """
 
-        return sorted([freak.name for freak in self.__freaks])
+        return sorted(self.get_freak_names_nosort())
+
+    def get_freak_names_nosort(self):
+        """ Return not sorted list with freak names.
+        :return: Names of all freaks (sorted).
+        """
+
+        return [freak.name for freak in self.__freaks]
 
     def set_freak_balance(self, name, balance):
         """ Set to freak with selected name new balance. Old balance disappear.
