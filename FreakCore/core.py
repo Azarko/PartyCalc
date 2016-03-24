@@ -82,13 +82,13 @@ class FreakCore(object):
         :return:
         """
 
-        if 0 < index < len(self.__freaks):
+        if 0 <= index < len(self.__freaks):
             name = self.__freaks.pop(index).name
             if self.verbose:
                 print "Freak %d(%s) deleted." % (index, name)
             return True
         else:
-            print "Invalid index: ." % index
+            print "Invalid index: %d." % index
             return False
 
     def delete_all_freaks(self):
