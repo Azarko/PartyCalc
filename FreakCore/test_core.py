@@ -51,6 +51,8 @@ class TestCore(unittest.TestCase):
         self.assertEqual(calc.get_freak_names(), sorted(names))
         self.assertFalse(calc.add_freak(names[0]))
         self.assertEqual(calc.get_freak_names(), sorted(names))
+        self.assertTrue(calc.delete_freak_by_index(0))
+        self.assertEqual(calc.get_freak_names(), sorted(names[1:]))
 
     def test_calculate_balance(self):
         calc = FreakCore(False)
