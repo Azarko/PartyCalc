@@ -142,6 +142,7 @@ class FreakCalcGUI(QtGui.QMainWindow):
             self.freak_calc.calculate_payments()
             for index, label in enumerate(self.freak_each_path_label):
                 label.setText(str(self.freak_calc.freaks[index].need_to_pay))
+                label.setText('%.2f' % self.freak_calc.freaks[index].need_to_pay)
 
 
 if __name__ == "__main__":
