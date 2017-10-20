@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 import unittest
 from core import Freak, FreakCore
 

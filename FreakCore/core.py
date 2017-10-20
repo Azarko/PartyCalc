@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+
+""" Api for working with freak calculator """
+
+
 class FreakCore(object):
     def_freak_name = "freak"
 
@@ -25,7 +31,6 @@ class FreakCore(object):
         else:
             string.append("Freaks nFot found")
         print "\n".join(string)
-        # return "\n".join(string)
 
     def print_freaks_payments(self):
         """ Print name and payment of each saved freak. """

@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
+
+""" GUI for freak calculator"""
+
+
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from core import FreakCore
 
 
 class FreakCalcGUI(QtGui.QMainWindow):
     def __init__(self):
-        super(FreakCalcGUI, self).__init__()
+        QtGui.QMainWindow.__init__(self)
         self.add_btn = None
         self.freak_del_btns = []
         self.freak_name_text = []
@@ -31,12 +35,6 @@ class FreakCalcGUI(QtGui.QMainWindow):
     def create_menu(self):
         menubar = self.menuBar()
         file_menu = menubar.addMenu("&File")
-
-        # new_action = QtGui.QAction("New", self)
-        # new_action.setStatusTip("New profile")
-
-        # load_action = QtGui.QAction("Load", self)
-        # load_action.setStatusTip("Load early saved profile")
         calc_action = QtGui.QAction("Calculate", self)
         calc_action.setStatusTip("Calculate balance")
         calc_action.triggered.connect(self.calculate)
@@ -45,11 +43,9 @@ class FreakCalcGUI(QtGui.QMainWindow):
         exit_action.setStatusTip("Exit application")
         exit_action.triggered.connect(QtGui.qApp.quit)
 
-        # file_menu.addAction(new_action)
-        # file_menu.addAction(load_action)
         file_menu.addAction(exit_action)
         file_menu.addAction(calc_action)
-        help_menu = menubar.addMenu("&Help")
+        # help_menu = menubar.addMenu("&Help")
 
     def add_freak(self):
         self.freak_calc.add_freak()
