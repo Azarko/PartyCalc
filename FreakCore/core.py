@@ -21,6 +21,16 @@ class FreakCore(object):
     def freaks(self):
         return self.__freaks
 
+    def __iter__(self):
+        for freak in self.freaks:
+            yield freak
+
+    def __len__(self):
+        return len(self.freaks)
+
+    def __getitem__(self, item):
+        return self.freaks[item]
+
     def print_freaks(self):
         """ Print name and balance of each saved freak. """
 
@@ -103,6 +113,8 @@ class FreakCore(object):
 
         self.__freaks = []
         self.each_pay = 0
+        if self.verbose:
+            print 'All freaks deleted'
         return True
 
     def get_freak_by_name(self, name):
@@ -180,6 +192,12 @@ class FreakCore(object):
         else:
             return self.__freaks[self.get_freak_index(name)].balance
 
+    def reset_freak_balance(self):
+        """ Reset freaks balance to 0"""
+
+        for freak in self.__freaks:
+            freak.set_balance(0)
+
     def _calculate_total_sum(self):
         """ Return Total sum of all freak's balances.
         :return: sum
@@ -233,6 +251,9 @@ class Freak(object):
         self.__freak_balance = 0.0
         self.set_balance(balance)
         self.need_to_pay = 0.0
+
+    def __repr__(self):
+        return '%s with balance %s' % (self.name, self.balance)
 
     @property
     def name(self):
