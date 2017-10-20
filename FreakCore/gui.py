@@ -1,147 +1,106 @@
 # -*- coding: utf-8 -*-
 
 
-""" GUI for freak calculator"""
-
-
-import sys
-from PyQt4 import QtGui
+from Tkinter import *
+from tkMessageBox import askyesno
+from tkSimpleDialog import askinteger
 from core import FreakCore
 
 
-class FreakCalcGUI(QtGui.QMainWindow):
-    def __init__(self):
-        QtGui.QMainWindow.__init__(self)
-        self.add_btn = None
-        self.freak_del_btns = []
-        self.freak_name_text = []
-        self.freak_balance_text = []
-        self.freak_each_path_label = []
-        self.x = 10
-        self.y = 20
-        self.init_ui()
-        self.freak_calc = FreakCore()
-
-    def init_ui(self):
-        self.setWindowTitle("Freak Calculator")
-        self.statusBar().showMessage("Ready")
-        self.setGeometry(300, 300, 500, 500)
+class FreakGUI(Frame):
+    def __init__(self, parent=None):
+        Frame.__init__(self, parent)
+        self.__freaks = FreakCore()
+        self.__freak_frames = []
+        self.__freak_payments = []
+        self.__freak_mp = []
+        self.pack(expand=YES, fill=BOTH)
+        self.master.title('Freak Calculator')
         self.create_menu()
-        self.create_add_button()
-
-        self.y += 30
-        self.show()
+        self.create_toolbar()
 
     def create_menu(self):
-        menubar = self.menuBar()
-        file_menu = menubar.addMenu("&File")
-        calc_action = QtGui.QAction("Calculate", self)
-        calc_action.setStatusTip("Calculate balance")
-        calc_action.triggered.connect(self.calculate)
+        self.menu = Menu(self.master)
+        self.master.config(menu=self.menu)
+        self.create_menu_file()
+        self.create_menu_edit()
 
-        exit_action = QtGui.QAction("Exit", self)
-        exit_action.setStatusTip("Exit application")
-        exit_action.triggered.connect(QtGui.qApp.quit)
+    def create_menu_file(self):
+        pulldown = Menu(self.menu)
+        pulldown.add_command(label='Calculate', command=self.calculate)
+        pulldown.add_separator()
+        pulldown.add_command(label='Save', command=self.not_ready)
+        pulldown.add_command(label='Save as...', command=self.not_ready)
+        pulldown.add_command(label='Load', command=self.not_ready)
+        pulldown.add_separator()
+        pulldown.add_command(label='Exit', command=self.quit)
+        self.menu.add_cascade(label='File', underline=0, menu=pulldown)
 
-        file_menu.addAction(exit_action)
-        file_menu.addAction(calc_action)
-        # help_menu = menubar.addMenu("&Help")
+    def create_menu_edit(self):
+        pulldown = Menu(self.menu)
+        pulldown.add_command(label='Delete all freaks', command=self.delete_all_freaks)
+        pulldown.add_command(label='Clear', command=self.clear)
+        pulldown.add_command(label='Add freak', command=self.add_freak)
+        pulldown.add_command(label='Add N freaks', command=self.add_n_freaks)
+        self.menu.add_cascade(label='Edit', underline=0, menu=pulldown)
+
+    def create_toolbar(self):
+        toolbar = Frame(self)
+        toolbar.pack(side=TOP, fill=X)
+        Button(toolbar, text='Calculate', cursor='hand2', command=self.calculate).pack(side=LEFT)
+        Button(toolbar, text='Add freak', cursor='hand2', command=self.add_freak).pack(side=LEFT)
+        Button(toolbar, text='Clear', cursor='hand2', command=self.clear).pack(side=LEFT)
+        Button(toolbar, text='Delete all freaks', cursor='hand2', command=self.delete_all_freaks).pack(side=LEFT)
 
     def add_freak(self):
-        self.freak_calc.add_freak()
-        self.add_btn.move(self.x, self.y)
-        self.create_del_button()
-        self.create_name_label()
-        self.create_balance_label()
-        self.create_each_pay_label()
-        self.freak_del_btns[-1].setText("del " + self.freak_calc.get_freak_names_nosort()[-1])
-        self.freak_name_text[-1].setText(self.freak_calc.get_freak_names_nosort()[-1])
-        self.y += 30
+        frame = Frame(self)
+        self.__freaks.add_freak()
+        freak_name = self.__freaks[-1].name
+        name = Entry(frame, width=30)
+        name.insert(0, freak_name)
+        name.pack(side=LEFT)
+        pay = Entry(frame, width=15)
+        pay.insert(0, 0.0)
+        pay.pack(side=LEFT)
+        self.__freak_payments.append(pay)
+        Label(frame, width=15, text='N/A').pack(side=LEFT)
+        Button(frame, text='Del', command=lambda: self.delete_freak(frame)).pack(side=LEFT)
+        frame.pack(side=TOP, )
+        self.__freak_frames.append(frame)
 
-    def delete_freak(self):
-        sender = self.sender()
-        index = self.freak_del_btns.index(sender)
-        old_btn = self.freak_del_btns.pop(index)
-        old_name = self.freak_name_text.pop(index)
-        old_blnc = self.freak_balance_text.pop(index)
-        old_pay = self.freak_each_path_label.pop(index)
-        self.freak_calc.delete_freak_by_index(index)
-        self.y -= 30
-        old_btn.hide()
-        old_name.hide()
-        old_blnc.hide()
-        old_pay.hide()
-        for index, btn in enumerate(self.freak_del_btns):
-            btn.move(self.x + 350, 20 + index * 30)
-            self.freak_name_text[index].move(self.x + 50, 20 + index * 30)
-            self.freak_balance_text[index].move(self.x + 150, 20 + index * 30)
-            self.freak_each_path_label[index].move(self.x + 250, 20 + index * 30)
-        self.add_btn.move(self.x, 20 + 30 * len(self.freak_del_btns))
+    def add_n_freaks(self):
+        n = askinteger('Enter count of freaks', 'Count of new freaks')
+        if n is None:
+            return
+        elif n <= 0:
+            raise ValueError('Count must be positive integer!')
+        for count in range(n):
+            self.add_freak()
+            self.update()
 
-    def create_add_button(self):
-        btn = QtGui.QPushButton("Add Freak", self)
-        btn.clicked.connect(self.add_freak)
-        btn.move(self.x, self.y)
-        btn.show()
-        if self.add_btn:
-            old_btn = self.add_btn.pop()
-            old_btn.hide()
-        self.add_btn = btn
+    def delete_freak(self, frame):
+        self.__freaks.delete_freak_by_index(self.__freak_frames.index(frame))
+        self.__freak_frames.remove(frame)
+        frame.pack_forget()
 
-    def create_del_button(self):
-        btn = QtGui.QPushButton("X", self)
-        btn.resize(btn.sizeHint())
-        btn.clicked.connect(self.delete_freak)
-        btn.move(self.x + 350, self.y - 30)
-        btn.show()
-        self.freak_del_btns.append(btn)
+    def delete_all_freaks(self):
+        if askyesno('Really delete', 'Are you really want to delete all members?'):
+            for frame in self.__freak_frames:
+                frame.pack_forget()
+            self.__freaks.delete_all_freaks()
 
-    def create_name_label(self):
-        lbl = QtGui.QLineEdit(self)
-        lbl.move(self.x + 50, self.y - 30)
-        lbl.editingFinished.connect(self.change_freak_name)
-        lbl.show()
-        self.freak_name_text.append(lbl)
+    def clear(self):
+        if askyesno('Really clear', 'Are you really want to clear all payment information?'):
+            for frame in self.__freak_payments:
+                frame.delete(0, len(frame.get()))
+                frame.insert(0, 0.0)
+            # self.__freaks.reset_freak_balance()
 
-    def change_freak_name(self):
-        sender = self.sender()
-        if sender in self.freak_name_text:
-            index = self.freak_name_text.index(sender)
-            self.freak_calc.freaks[index].change_name(sender.text())
-            self.freak_del_btns[index].setText("del " + self.freak_calc.freaks[index].name)
-
-    def create_balance_label(self):
-        lbl = QtGui.QLineEdit(self)
-        lbl.move(self.x + 150, self.y - 30)
-        lbl.editingFinished.connect(self.change_freak_balance)
-        lbl.show()
-        self.freak_balance_text.append(lbl)
-
-    def create_each_pay_label(self):
-        lbl = QtGui.QLabel("0.0", self)
-        lbl.move(self.x + 250, self.y - 30)
-        lbl.show()
-        self.freak_each_path_label.append(lbl)
-
-    def change_freak_balance(self):
-        sender = self.sender()
-        if sender in self.freak_balance_text:
-            index = self.freak_balance_text.index(sender)
-            try:
-                self.freak_calc.freaks[index].set_balance(float(sender.text()))
-            except ValueError:
-                sender.clear()
-            sender.setText(str(self.freak_calc.freaks[index].balance))
+    def not_ready(self):
+        print 'Not ready'
 
     def calculate(self):
-        if len(self.freak_calc.freaks):
-            self.freak_calc.calculate_payments()
-            for index, label in enumerate(self.freak_each_path_label):
-                label.setText(str(self.freak_calc.freaks[index].need_to_pay))
-                label.setText('%.2f' % self.freak_calc.freaks[index].need_to_pay)
+        pass
 
-
-if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
-    gui = FreakCalcGUI()
-    sys.exit(app.exec_())
+if __name__ == '__main__':
+    FreakGUI().mainloop()
