@@ -6,6 +6,7 @@
 
 class FreakCore(object):
     def_freak_name = "freak"
+    __version__ = '1.1.0'
 
     def __init__(self, verbose=True):
         """ Initialize of class.
@@ -211,7 +212,8 @@ class FreakCore(object):
     def calculate_payments(self):
         total_sum = self._calculate_total_sum()
         self.each_pay = total_sum / len(self.__freaks)
-        print "Every freak must pay %2.2f" % self.each_pay
+        if self.verbose:
+            print "Each freak must pay %2.2f" % self.each_pay
         for freak in self.__freaks:
             freak.need_to_pay = self.each_pay - freak.balance
 
