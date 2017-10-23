@@ -10,7 +10,7 @@ from tkMessageBox import askyesno, showinfo, showerror
 from tkSimpleDialog import askinteger
 from core import FreakCore
 
-__version__ = '0.9.5 beta'
+__version__ = '0.9.6 beta'
 __all__ = ['FreakGUI', 'FreakFrame']
 
 # TODO: move to root folder.
@@ -57,8 +57,11 @@ class FreakFrame(Frame):
         frame.pack(side=TOP, anchor=W)
 
     def add_freak(self, event=None):
+        # Need redefine entry input for use with main window's shortcuts
         def read_numbers(event=None):
-            if not event.char.isdigit():
+            # Check for digit and special symbols
+            if event.char.isalpha():
+                #and not event.keysym.startswith('Return') and not event.keysym.startswith('Esc'):
                 return 'break'
 
         def read_symbols(event=None):
@@ -111,6 +114,7 @@ class FreakFrame(Frame):
         frame.pack_forget()
         if not len(self.__freak_frames):
             self.calc_button['state'] = DISABLED
+        self.focus_set()
 
     def delete_last_freak(self, event=None):
         if len(self.__freak_frames):
@@ -187,7 +191,6 @@ class FreakGUI(Tk):
         self.bind('<Return>', lambda event: self.focus_set())
         self.bind('<Escape>', lambda event: self.focus_set())
         self.bind('<Shift-Escape>', lambda event: self.quit())
-
 
     def create_menu(self):
         self.menu = Menu(self)
