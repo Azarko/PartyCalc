@@ -10,14 +10,17 @@ from tkMessageBox import askyesno, showinfo, showerror
 from tkSimpleDialog import askinteger
 from core import FreakCore
 
-__version__ = '0.9.1 beta'
+__version__ = '0.9.2 beta'
 
 # TODO: move to root folder.
 # TODO: save, load
-# TODO: title frame
 
 
 class FreakGUI(Frame):
+    name_width = 35
+    paid_width = 15
+    must_pay_width = 15
+
     def __init__(self, parent=None):
         Frame.__init__(self, parent)
         self.__freaks = FreakCore()
@@ -26,6 +29,7 @@ class FreakGUI(Frame):
         self.master.title('Freak Calculator')
         self.create_menu()
         self.create_toolbar()
+        self.create_title()
 
     def create_menu(self):
         self.menu = Menu(self.master)
@@ -34,7 +38,7 @@ class FreakGUI(Frame):
         self.create_menu_about()
 
     def create_menu_file(self):
-        menu = Menu(self.menu)
+        menu = Menu(self.menu, tearoff=False)
         menu.add_command(label='Save', command=self.not_ready)
         menu.add_command(label='Save as...', command=self.not_ready)
         menu.add_command(label='Load', command=self.not_ready)
@@ -43,7 +47,7 @@ class FreakGUI(Frame):
         self.menu.add_cascade(label='File', underline=0, menu=menu)
 
     def create_menu_about(self):
-        menu = Menu(self.menu)
+        menu = Menu(self.menu, tearoff=False)
         menu.add_command(label='Help', command=self.help)
         menu.add_command(label='About', command=self.about)
         self.menu.add_cascade(label='About', underline=0, menu=menu)
@@ -61,19 +65,32 @@ class FreakGUI(Frame):
         self.edit_button.pack(side=LEFT)
         self.toolbar = toolbar
 
+    def create_title(self):
+        frame = Frame(self)
+        name = Entry(frame, width=self.name_width)
+        name.insert(0, 'Name')
+        name['state'] = DISABLED
+        name.pack(side=LEFT)
+        paid = Entry(frame, width=self.paid_width)
+        paid.insert(0, 'Paid')
+        paid['state'] = DISABLED
+        paid.pack(side=LEFT)
+        Label(frame, width=self.must_pay_width, text='Need to pay', state=DISABLED).pack(side=LEFT)
+        frame.pack(side=TOP, anchor=W)
+
     def add_freak(self):
         frame = Frame(self)
         self.__freaks.add_freak()
         freak_name = self.__freaks[-1].name
-        name = Entry(frame, width=30)
+        name = Entry(frame, width=self.name_width)
         name.insert(0, freak_name)
         name.pack(side=LEFT)
-        pay = Entry(frame, width=15)
-        pay.insert(0, 0.0)
-        pay.pack(side=LEFT)
-        Label(frame, width=15, text='N/A').pack(side=LEFT)
+        paid = Entry(frame, width=self.paid_width)
+        paid.insert(0, 0.0)
+        paid.pack(side=LEFT)
+        Label(frame, width=self.must_pay_width, text='N/A').pack(side=LEFT)
         Button(frame, text='Del', command=lambda: self.delete_freak(frame)).pack(side=LEFT)
-        frame.pack(side=TOP, )
+        frame.pack(side=TOP, anchor=W)
         self.__freak_frames.append(frame)
         if self.calc_button['state'] == DISABLED:
             self.calc_button['state'] = NORMAL
@@ -129,10 +146,7 @@ class FreakGUI(Frame):
 
     def change_state(self):
         def change_element(element):
-            if element['state'] == NORMAL:
-                element['state'] = DISABLED
-            else:
-                element['state'] = NORMAL
+            element['state'] = DISABLED if element['state'] == NORMAL else NORMAL
 
         for element in self.toolbar.winfo_children():
             change_element(element)
