@@ -6,15 +6,14 @@ App for calculate party payments.
 """
 
 from Tkinter import *
-from tkMessageBox import askyesno, showerror
+from tkMessageBox import askyesno, showinfo, showerror
 from tkSimpleDialog import askinteger
 from core import FreakCore
 
-__version__ = '0.9.0 beta'
+__version__ = '0.9.1 beta'
 
 # TODO: move to root folder.
 # TODO: save, load
-# TODO: help, about
 # TODO: title frame
 
 
@@ -35,19 +34,19 @@ class FreakGUI(Frame):
         self.create_menu_about()
 
     def create_menu_file(self):
-        pulldown = Menu(self.menu)
-        pulldown.add_command(label='Save', command=self.not_ready)
-        pulldown.add_command(label='Save as...', command=self.not_ready)
-        pulldown.add_command(label='Load', command=self.not_ready)
-        pulldown.add_separator()
-        pulldown.add_command(label='Exit', command=self.quit)
-        self.menu.add_cascade(label='File', underline=0, menu=pulldown)
+        menu = Menu(self.menu)
+        menu.add_command(label='Save', command=self.not_ready)
+        menu.add_command(label='Save as...', command=self.not_ready)
+        menu.add_command(label='Load', command=self.not_ready)
+        menu.add_separator()
+        menu.add_command(label='Exit', command=self.quit)
+        self.menu.add_cascade(label='File', underline=0, menu=menu)
 
     def create_menu_about(self):
-        pulldown = Menu(self.menu)
-        pulldown.add_command(label='Help', command=self.not_ready)
-        pulldown.add_command(label='About', command=self.not_ready)
-        self.menu.add_cascade(label='About', underline=0, menu=pulldown)
+        menu = Menu(self.menu)
+        menu.add_command(label='Help', command=self.help)
+        menu.add_command(label='About', command=self.about)
+        self.menu.add_cascade(label='About', underline=0, menu=menu)
 
     def create_toolbar(self):
         toolbar = Frame(self)
@@ -143,6 +142,25 @@ class FreakGUI(Frame):
 
     def not_ready(self):
         print 'Not ready'
+
+    def help(self):
+        text = '''
+        How to use Freak Calculator:
+         - press 'Add freak' for add new member;
+         - set his name and pay-value;
+         - repeat it for all you party-members;
+         - press calculate and watch result;
+         - if you need change something - press 'Edit'
+        
+        Press 'Clean' for reset all pays.
+        Press 'Delete all freaks' for delete all members.
+        Press 'Add N freaks' for add few members at same time.
+        '''
+        showinfo('FreakCalc version %s' % __version__, text)
+
+    def about(self):
+        text = 'FreakCalc ver. %s.\nApp for calculating party payments.\n2017.' % __version__
+        showinfo('About FreakCalc', text)
 
 
 if __name__ == '__main__':
