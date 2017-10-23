@@ -10,14 +10,15 @@ from tkMessageBox import askyesno, showinfo, showerror
 from tkSimpleDialog import askinteger
 from core import FreakCore
 
-__version__ = '0.9.3 beta'
-__all__ = ['FreakGUI']
+__version__ = '0.9.4 beta'
+__all__ = ['FreakGUI', 'FreakFrame']
 
 # TODO: move to root folder.
 # TODO: save, load
+# TODO: hot-keys
 
 
-class FreakGUI(Frame):
+class FreakFrame(Frame):
     name_width = 35
     paid_width = 15
     must_pay_width = 15
@@ -26,32 +27,8 @@ class FreakGUI(Frame):
         Frame.__init__(self, parent)
         self.__freaks = FreakCore(verbose=False)
         self.__freak_frames = []
-        self.pack(expand=YES, fill=BOTH)
-        self.master.title('Freak Calculator')
-        self.create_menu()
         self.create_toolbar()
-        self.create_title()
-
-    def create_menu(self):
-        self.menu = Menu(self.master)
-        self.master.config(menu=self.menu)
-        self.create_menu_file()
-        self.create_menu_about()
-
-    def create_menu_file(self):
-        menu = Menu(self.menu, tearoff=False)
-        menu.add_command(label='Save', command=self.not_ready)
-        menu.add_command(label='Save as...', command=self.not_ready)
-        menu.add_command(label='Load', command=self.not_ready)
-        menu.add_separator()
-        menu.add_command(label='Exit', command=self.quit)
-        self.menu.add_cascade(label='File', underline=0, menu=menu)
-
-    def create_menu_about(self):
-        menu = Menu(self.menu, tearoff=False)
-        menu.add_command(label='Help', command=self.help)
-        menu.add_command(label='About', command=self.about)
-        self.menu.add_cascade(label='About', underline=0, menu=menu)
+        self.create_title_frame()
 
     def create_toolbar(self):
         toolbar = Frame(self)
@@ -66,7 +43,7 @@ class FreakGUI(Frame):
         self.edit_button.pack(side=LEFT)
         self.toolbar = toolbar
 
-    def create_title(self):
+    def create_title_frame(self):
         frame = Frame(self)
         name = Entry(frame, width=self.name_width)
         name.insert(0, 'Name')
@@ -155,6 +132,35 @@ class FreakGUI(Frame):
             for element in frame.winfo_children()[0:2] + [frame.winfo_children()[3]]:
                 change_element(element)
 
+
+class FreakGUI(Tk):
+    def __init__(self):
+        Tk.__init__(self)
+        self.title('Freak Calculator')
+        self.create_menu()
+        FreakFrame(self).pack(fill=Y)
+
+    def create_menu(self):
+        self.menu = Menu(self)
+        self.config(menu=self.menu)
+        self.create_menu_file()
+        self.create_menu_about()
+
+    def create_menu_file(self):
+        menu = Menu(self.menu, tearoff=False)
+        menu.add_command(label='Save', command=self.not_ready)
+        menu.add_command(label='Save as...', command=self.not_ready)
+        menu.add_command(label='Load', command=self.not_ready)
+        menu.add_separator()
+        menu.add_command(label='Exit', command=self.quit)
+        self.menu.add_cascade(label='File', underline=0, menu=menu)
+
+    def create_menu_about(self):
+        menu = Menu(self.menu, tearoff=False)
+        menu.add_command(label='Help', command=self.help)
+        menu.add_command(label='About', command=self.about)
+        self.menu.add_cascade(label='About', underline=0, menu=menu)
+
     def not_ready(self):
         print 'Not ready'
 
@@ -166,7 +172,7 @@ class FreakGUI(Frame):
          - repeat it for all you party-members;
          - press calculate and watch result;
          - if you need change something - press 'Edit'
-        
+
         Press 'Clean' for reset all pays.
         Press 'Delete all freaks' for delete all members.
         Press 'Add N freaks' for add few members at same time.
@@ -179,4 +185,5 @@ class FreakGUI(Frame):
 
 
 if __name__ == '__main__':
-    FreakGUI().mainloop()
+    t = FreakGUI()
+    t.mainloop()
