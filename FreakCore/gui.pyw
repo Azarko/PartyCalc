@@ -10,7 +10,8 @@ from tkMessageBox import askyesno, showinfo, showerror
 from tkSimpleDialog import askinteger
 from core import FreakCore
 
-__version__ = '0.9.2 beta'
+__version__ = '0.9.3 beta'
+__all__ = ['FreakGUI']
 
 # TODO: move to root folder.
 # TODO: save, load
@@ -23,7 +24,7 @@ class FreakGUI(Frame):
 
     def __init__(self, parent=None):
         Frame.__init__(self, parent)
-        self.__freaks = FreakCore()
+        self.__freaks = FreakCore(verbose=False)
         self.__freak_frames = []
         self.pack(expand=YES, fill=BOTH)
         self.master.title('Freak Calculator')
@@ -141,7 +142,7 @@ class FreakGUI(Frame):
             self.__freaks[counter].set_balance(freak_balance)
         self.__freaks.calculate_payments()
         for freak, mp_label in zip(self.__freaks, self.get_mp_labels()):
-            mp_label['text'] = '%.2f' % freak.need_to_pay
+            mp_label['text'] = '%.2f' % round(freak.need_to_pay, 2)
         self.change_state()
 
     def change_state(self):
