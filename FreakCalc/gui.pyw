@@ -10,7 +10,7 @@ from tkMessageBox import askyesno, showinfo, showerror
 from tkSimpleDialog import askinteger
 from core import FreakCore
 
-__version__ = '0.9.7 beta'
+__version__ = '0.9.8 beta'
 __all__ = ['FreakGUI', 'FreakFrame']
 
 # TODO: move to root folder.
@@ -21,6 +21,7 @@ class FreakFrame(Frame):
     name_width = 35
     paid_width = 15
     mp_width = 15
+    del_width = 3
     mp_label_color_def = 'SystemButtonFace'
     mp_label_color_pos = 'tomato'
     mp_label_color_neg = 'pale green'
@@ -59,6 +60,7 @@ class FreakFrame(Frame):
         paid['state'] = DISABLED
         paid.pack(side=LEFT)
         Label(frame, width=self.mp_width, text='Need to pay', state=DISABLED).pack(side=LEFT)
+        Label(frame, width=self.del_width, text='Del', state=DISABLED).pack(side=LEFT)
         frame.pack(side=TOP, anchor=W)
 
     def create_total_frame(self):
@@ -97,7 +99,7 @@ class FreakFrame(Frame):
         paid.bind('<KeyPress>', read_numbers)
         paid.pack(side=LEFT)
         Label(frame, width=self.mp_width, text='N/A', bg=self.mp_label_color_def).pack(side=LEFT)
-        Button(frame, text='Del', command=lambda: self.delete_freak(frame)).pack(side=LEFT)
+        Button(frame, text='Del', command=lambda: self.delete_freak(frame), width=self.del_width).pack(side=LEFT)
         frame.pack(side=TOP, anchor=W)
         self.__freak_frames.append(frame)
         if self.calc_button['state'] == DISABLED:
@@ -204,10 +206,17 @@ class FreakGUI(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.title('Freak Calculator')
+        self.resizable(width=False, height=False)
         self.create_menu()
         self.freak_frame = FreakFrame(self)
         self.set_binds()
-        self.freak_frame.pack(fill=Y)
+        self.freak_frame.pack(fill=Y, expand=YES, )
+        self.create_footer()
+
+    def create_footer(self):
+        toolbar = Frame(self)
+        Label(self, text='FreakCalc ver. %s' % __version__).pack(side=RIGHT)
+        toolbar.pack(side=BOTTOM, fill=X)
 
     def set_binds(self):
         unset_control_binds = ['a', 'A', 'c', 'C', 'e', 'E', 'd', 'D']
