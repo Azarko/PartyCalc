@@ -10,7 +10,7 @@ from tkMessageBox import askyesno, showinfo, showerror
 from tkSimpleDialog import askinteger
 from core import FreakCore
 
-__version__ = '0.9.6 beta'
+__version__ = '0.9.7 beta'
 __all__ = ['FreakGUI', 'FreakFrame']
 
 # TODO: move to root folder.
@@ -20,15 +20,20 @@ __all__ = ['FreakGUI', 'FreakFrame']
 class FreakFrame(Frame):
     name_width = 35
     paid_width = 15
-    must_pay_width = 15
+    mp_width = 15
+    mp_label_color_def = 'SystemButtonFace'
+    mp_label_color_pos = 'tomato'
+    mp_label_color_neg = 'pale green'
+    mp_label_color_0 = 'CadetBlue2'
 
     def __init__(self, parent=None):
         self.edit_flag = True
         Frame.__init__(self, parent)
-        self.__freaks = FreakCore(verbose=False)
+        self.__freaks = FreakCore(verbose=True)
         self.__freak_frames = []
         self.create_toolbar()
         self.create_title_frame()
+        self.create_total_frame()
 
     def create_toolbar(self):
         toolbar = Frame(self)
@@ -53,15 +58,21 @@ class FreakFrame(Frame):
         paid.insert(0, 'Paid')
         paid['state'] = DISABLED
         paid.pack(side=LEFT)
-        Label(frame, width=self.must_pay_width, text='Need to pay', state=DISABLED).pack(side=LEFT)
+        Label(frame, width=self.mp_width, text='Need to pay', state=DISABLED).pack(side=LEFT)
         frame.pack(side=TOP, anchor=W)
+
+    def create_total_frame(self):
+        self.total_frame = Frame(self)
+        Label(self.total_frame, text='Each member must pay:').pack(side=LEFT)
+        Label(self.total_frame, text='0.0').pack(side=LEFT)
 
     def add_freak(self, event=None):
         # Need redefine entry input for use with main window's shortcuts
         def read_numbers(event=None):
             # Check for digit and special symbols
-            if event.char.isalpha():
-                #and not event.keysym.startswith('Return') and not event.keysym.startswith('Esc'):
+            if event.char.isalpha() or event.char in '!@#$%^&*()-=_+/|\\<>,`~':
+                return 'break'
+            if event.char == '.' and '.' in event.widget.get():
                 return 'break'
 
         def read_symbols(event=None):
@@ -85,7 +96,7 @@ class FreakFrame(Frame):
         paid.insert(0, 0.0)
         paid.bind('<KeyPress>', read_numbers)
         paid.pack(side=LEFT)
-        Label(frame, width=self.must_pay_width, text='N/A').pack(side=LEFT)
+        Label(frame, width=self.mp_width, text='N/A', bg=self.mp_label_color_def).pack(side=LEFT)
         Button(frame, text='Del', command=lambda: self.delete_freak(frame)).pack(side=LEFT)
         frame.pack(side=TOP, anchor=W)
         self.__freak_frames.append(frame)
@@ -132,9 +143,10 @@ class FreakFrame(Frame):
         if not self.edit_flag:
             return
         if askyesno('Really clear', 'Are you really want to clear all payment information?'):
-            for label in self.get_pay_entries():
-                label.delete(0, len(label.get()))
-                label.insert(0, 0.0)
+            for entry in self.get_pay_entries():
+                entry.delete(0, len(entry.get()))
+                entry.insert(0, 0.0)
+            self.reset_mp_labels_color()
 
     def get_pay_entries(self):
         return [frame.winfo_children()[1] for frame in self.__freak_frames]
@@ -142,15 +154,28 @@ class FreakFrame(Frame):
     def get_mp_labels(self):
         return [frame.winfo_children()[2] for frame in self.__freak_frames]
 
+    def reset_mp_labels_color(self):
+        for label in self.get_mp_labels():
+            label['bg'] = self.mp_label_color_def
+
     def calculate(self, event=None):
         if not self.edit_flag or not self.__freaks:
             return
         for counter, pay_entry in enumerate(self.get_pay_entries()):
-            freak_balance = float(pay_entry.get()) if pay_entry.get().isdigit() else 0.0
+            try:
+                freak_balance = float(pay_entry.get())
+            except ValueError:
+                freak_balance = 0.0
             self.__freaks[counter].set_balance(freak_balance)
         self.__freaks.calculate_payments()
         for freak, mp_label in zip(self.__freaks, self.get_mp_labels()):
             mp_label['text'] = '%.2f' % round(freak.need_to_pay, 2)
+            if freak.need_to_pay < 0:
+                mp_label['bg'] = self.mp_label_color_neg
+            elif freak.need_to_pay > 0:
+                mp_label['bg'] = self.mp_label_color_pos
+            else:
+                mp_label['bg'] = self.mp_label_color_0
         self.change_state()
 
     def change_state(self, event=None):
@@ -159,6 +184,13 @@ class FreakFrame(Frame):
 
         if event and self.edit_flag:
             return
+        if not self.edit_flag:
+            self.reset_mp_labels_color()
+            self.total_frame.pack_forget()
+        else:
+            label = self.total_frame.winfo_children()[1]
+            label['text'] = round(self.__freaks.each_pay, 2)
+            self.total_frame.pack(anchor=W)
 
         for element in self.toolbar.winfo_children():
             change_element(element)
