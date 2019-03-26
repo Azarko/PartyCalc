@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-
-
 import unittest
-from core import Freak, FreakCore
+from .core import Freak, FreakCore
 
 
 class TestFreak(unittest.TestCase):

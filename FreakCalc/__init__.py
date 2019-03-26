@@ -1,4 +1,2 @@
-# -*- coding: utf-8 -*-
-
-import core
-import gui
+from . import core
+from . import gui

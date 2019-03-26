@@ -1,16 +1,22 @@
-# -*- coding: utf-8 -*-
-
 """
 Freak Calc GUI.
 App for calculate party payments.
 """
 
-from Tkinter import *
-from tkMessageBox import askyesno, showinfo, showerror
-from tkSimpleDialog import askinteger
-from core import FreakCore
+__author__ = 'Boris Polyanskiy'
 
-__version__ = '0.9.8 beta'
+try:
+    from Tkinter import *
+    from tkMessageBox import askyesno, showinfo, showerror
+    from tkSimpleDialog import askinteger
+except ImportError:
+    from tkinter import *
+    from tkinter.messagebox import askyesno, showinfo, showerror
+    from tkinter.simpledialog import askinteger
+
+from .core import FreakCore
+
+__version__ = '0.9.9 beta'
 __all__ = ['FreakGUI', 'FreakFrame']
 
 # TODO: move to root folder.
@@ -257,7 +263,7 @@ class FreakGUI(Tk):
         self.menu.add_cascade(label='About', underline=0, menu=menu)
 
     def not_ready(self):
-        print 'Not ready'
+        print('Not ready')
 
     def show_help(self):
         text = '''
