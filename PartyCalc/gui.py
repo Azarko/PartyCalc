@@ -1,29 +1,21 @@
 """
-Freak Calc GUI.
+Party Calc GUI.
 App for calculate party payments.
 """
 
 __author__ = 'Boris Polyanskiy'
 
-try:
-    from Tkinter import *
-    from tkMessageBox import askyesno, showinfo, showerror
-    from tkSimpleDialog import askinteger
-except ImportError:
-    from tkinter import *
-    from tkinter.messagebox import askyesno, showinfo, showerror
-    from tkinter.simpledialog import askinteger
+from tkinter import *
+from tkinter.messagebox import askyesno, showinfo, showerror
+from tkinter.simpledialog import askinteger
 
-from .core import FreakCore
+from PartyCalc import __version__
+from PartyCalc.calculator import PartyCalculator
 
-__version__ = '0.9.9 beta'
-__all__ = ['FreakGUI', 'FreakFrame']
-
-# TODO: move to root folder.
 # TODO: save, load
 
 
-class FreakFrame(Frame):
+class CalculatorFrame(Frame):
     name_width = 35
     paid_width = 15
     mp_width = 15
@@ -36,21 +28,22 @@ class FreakFrame(Frame):
     def __init__(self, parent=None):
         self.edit_flag = True
         Frame.__init__(self, parent)
-        self.__freaks = FreakCore(verbose=True)
-        self.__freak_frames = []
+        self.calculator = PartyCalculator()
+        self.person_frames = []
         self.create_toolbar()
         self.create_title_frame()
         self.create_total_frame()
+        self.person_index = 1
 
     def create_toolbar(self):
         toolbar = Frame(self)
         toolbar.pack(side=TOP, fill=X)
         self.calc_button = Button(toolbar, text='Calculate', cursor='hand2', command=self.calculate, state=DISABLED)
         self.calc_button.pack(side=LEFT)
-        Button(toolbar, text='Add freak', cursor='hand2', command=self.add_freak).pack(side=LEFT)
-        Button(toolbar, text='Add N freaks', cursor='hand2', command=self.add_n_freaks).pack(side=LEFT)
+        Button(toolbar, text='Add person', cursor='hand2', command=self.add_person).pack(side=LEFT)
+        Button(toolbar, text='Add N persons', cursor='hand2', command=self.add_n_persons).pack(side=LEFT)
         Button(toolbar, text='Clear', cursor='hand2', command=self.clear).pack(side=LEFT)
-        Button(toolbar, text='Delete all freaks', cursor='hand2', command=self.delete_all_freaks).pack(side=LEFT)
+        Button(toolbar, text='Delete all persons', cursor='hand2', command=self.delete_all_persons).pack(side=LEFT)
         self.edit_button = Button(toolbar, text='Edit', cursor='hand2', command=self.change_state, state=DISABLED)
         self.edit_button.pack(side=LEFT)
         self.toolbar = toolbar
@@ -74,7 +67,7 @@ class FreakFrame(Frame):
         Label(self.total_frame, text='Each member must pay:').pack(side=LEFT)
         Label(self.total_frame, text='0.0').pack(side=LEFT)
 
-    def add_freak(self, event=None):
+    def add_person(self, event=None):
         # Need redefine entry input for use with main window's shortcuts
         def read_numbers(event=None):
             # Check for digit and special symbols
@@ -94,10 +87,12 @@ class FreakFrame(Frame):
         if not self.edit_flag:
             return
         frame = Frame(self)
-        self.__freaks.add_freak()
-        freak_name = self.__freaks[-1].name
+        person_name = f'person_{self.person_index:02d}'
+        self.calculator.add_person(person_name)
+        self.person_index += 1
+        person_name = self.calculator[-1].name
         name = Entry(frame, width=self.name_width)
-        name.insert(0, freak_name)
+        name.insert(0, person_name)
         name.bind('<KeyPress>', read_symbols)
         name.pack(side=LEFT)
         paid = Entry(frame, width=self.paid_width)
@@ -105,16 +100,16 @@ class FreakFrame(Frame):
         paid.bind('<KeyPress>', read_numbers)
         paid.pack(side=LEFT)
         Label(frame, width=self.mp_width, text='N/A', bg=self.mp_label_color_def).pack(side=LEFT)
-        Button(frame, text='Del', command=lambda: self.delete_freak(frame), width=self.del_width).pack(side=LEFT)
+        Button(frame, text='Del', command=lambda: self.delete_person(frame), width=self.del_width).pack(side=LEFT)
         frame.pack(side=TOP, anchor=W)
-        self.__freak_frames.append(frame)
+        self.person_frames.append(frame)
         if self.calc_button['state'] == DISABLED:
             self.calc_button['state'] = NORMAL
 
-    def add_n_freaks(self, event=None):
+    def add_n_persons(self, event=None):
         if not self.edit_flag:
             return
-        n = askinteger('Enter count of freaks', 'Count of new freaks')
+        n = askinteger('Enter count of persons', 'Count of new persons')
         if n is None:
             return
         elif n <= 0:
@@ -124,27 +119,28 @@ class FreakFrame(Frame):
             showerror('Error!', 'Count too big! Please input value between 1 and 15')
             raise ValueError('Count too big!')
         for count in range(n):
-            self.add_freak()
+            self.add_person()
             self.update()
 
-    def delete_freak(self, frame):
-        self.__freaks.delete_freak_by_index(self.__freak_frames.index(frame))
-        self.__freak_frames.remove(frame)
+    def delete_person(self, frame):
+        self.calculator.delete_person(self.calculator[self.person_frames.index(frame)].name)
+        self.person_frames.remove(frame)
         frame.pack_forget()
-        if not len(self.__freak_frames):
+        if not len(self.person_frames):
             self.calc_button['state'] = DISABLED
         self.focus_set()
 
-    def delete_last_freak(self, event=None):
-        if len(self.__freak_frames):
-            self.delete_freak(self.__freak_frames[-1])
+    def delete_last_person(self, event=None):
+        if len(self.person_frames):
+            self.delete_person(self.person_frames[-1])
+        self.person_index = 1
 
-    def delete_all_freaks(self, event=None):
+    def delete_all_persons(self, event=None):
         if askyesno('Really delete', 'Are you really want to delete all members?'):
-            for frame in self.__freak_frames:
+            for frame in self.person_frames:
                 frame.pack_forget()
-            self.__freak_frames = []
-            self.__freaks.delete_all_freaks()
+            self.person_frames = []
+            self.calculator.reset()
             self.calc_button['state'] = DISABLED
 
     def clear(self, event=None):
@@ -157,30 +153,30 @@ class FreakFrame(Frame):
             self.reset_mp_labels_color()
 
     def get_pay_entries(self):
-        return [frame.winfo_children()[1] for frame in self.__freak_frames]
+        return [frame.winfo_children()[1] for frame in self.person_frames]
 
     def get_mp_labels(self):
-        return [frame.winfo_children()[2] for frame in self.__freak_frames]
+        return [frame.winfo_children()[2] for frame in self.person_frames]
 
     def reset_mp_labels_color(self):
         for label in self.get_mp_labels():
             label['bg'] = self.mp_label_color_def
 
     def calculate(self, event=None):
-        if not self.edit_flag or not self.__freaks:
+        if not self.edit_flag or not self.calculator:
             return
         for counter, pay_entry in enumerate(self.get_pay_entries()):
             try:
-                freak_balance = float(pay_entry.get())
+                person_balance = float(pay_entry.get())
             except ValueError:
-                freak_balance = 0.0
-            self.__freaks[counter].set_balance(freak_balance)
-        self.__freaks.calculate_payments()
-        for freak, mp_label in zip(self.__freaks, self.get_mp_labels()):
-            mp_label['text'] = '%.2f' % round(freak.need_to_pay, 2)
-            if freak.need_to_pay < 0:
+                person_balance = 0.0
+            self.calculator.set_person_balance(self.calculator[counter].name, person_balance)
+        self.calculator.calculate_payments()
+        for person, mp_label in zip(self.calculator, self.get_mp_labels()):
+            mp_label['text'] = '%.2f' % round(person.need_to_pay, 2)
+            if person.need_to_pay < 0:
                 mp_label['bg'] = self.mp_label_color_neg
-            elif freak.need_to_pay > 0:
+            elif person.need_to_pay > 0:
                 mp_label['bg'] = self.mp_label_color_pos
             else:
                 mp_label['bg'] = self.mp_label_color_0
@@ -197,44 +193,44 @@ class FreakFrame(Frame):
             self.total_frame.pack_forget()
         else:
             label = self.total_frame.winfo_children()[1]
-            label['text'] = round(self.__freaks.each_pay, 2)
+            label['text'] = round(self.calculator.each_pay, 2)
             self.total_frame.pack(anchor=W)
 
         for element in self.toolbar.winfo_children():
             change_element(element)
-        for frame in self.__freak_frames:
+        for frame in self.person_frames:
             for element in frame.winfo_children()[0:2] + [frame.winfo_children()[3]]:
                 change_element(element)
         self.edit_flag = not self.edit_flag
 
 
-class FreakGUI(Tk):
+class CalculatorGUI(Tk):
     def __init__(self):
         Tk.__init__(self)
-        self.title('Freak Calculator')
+        self.title('Party Calculator')
         self.resizable(width=False, height=False)
         self.create_menu()
-        self.freak_frame = FreakFrame(self)
+        self.calculator_frame = CalculatorFrame(self)
         self.set_binds()
-        self.freak_frame.pack(fill=Y, expand=YES, )
+        self.calculator_frame.pack(fill=Y, expand=YES, )
         self.create_footer()
 
     def create_footer(self):
         toolbar = Frame(self)
-        Label(self, text='FreakCalc ver. %s' % __version__).pack(side=RIGHT)
+        Label(self, text='PartyCalc ver. %s' % __version__).pack(side=RIGHT)
         toolbar.pack(side=BOTTOM, fill=X)
 
     def set_binds(self):
         unset_control_binds = ['a', 'A', 'c', 'C', 'e', 'E', 'd', 'D']
         for bind in unset_control_binds:
             self.bind('<Control-%s>' % bind, lambda event: None)
-        self.bind('a', self.freak_frame.add_freak)
-        self.bind('A', self.freak_frame.add_n_freaks)
-        self.bind('c', self.freak_frame.calculate)
-        self.bind('C', self.freak_frame.clear)
-        self.bind('e', self.freak_frame.change_state)
-        self.bind('d', self.freak_frame.delete_last_freak)
-        self.bind('D', self.freak_frame.delete_all_freaks)
+        self.bind('a', self.calculator_frame.add_person)
+        self.bind('A', self.calculator_frame.add_n_persons)
+        self.bind('c', self.calculator_frame.calculate)
+        self.bind('C', self.calculator_frame.clear)
+        self.bind('e', self.calculator_frame.change_state)
+        self.bind('d', self.calculator_frame.delete_last_person)
+        self.bind('D', self.calculator_frame.delete_all_persons)
         self.bind('<Return>', lambda event: self.focus_set())
         self.bind('<Escape>', lambda event: self.focus_set())
         self.bind('<Shift-Escape>', lambda event: self.quit())
@@ -267,38 +263,41 @@ class FreakGUI(Tk):
 
     def show_help(self):
         text = '''
-        How to use Freak Calculator:
-         - press 'Add freak' for add new member;
+        How to use Party Calculator:
+         - press 'Add person' for add new member;
          - set his name and pay-value;
          - repeat it for all you party-members;
          - press calculate and watch result;
          - if you need change something - press 'Edit'
 
         Press 'Clean' for reset all pays.
-        Press 'Delete all freaks' for delete all members.
-        Press 'Add N freaks' for add few members at same time.
+        Press 'Delete all persons' for delete all members.
+        Press 'Add N persons' for add few members at same time.
         '''
-        showinfo('FreakCalc version %s' % __version__, text)
+        showinfo('PartyCalc version %s' % __version__, text)
 
     def show_shortcuts(self):
         text = '''
         Shortcuts:
-         • a - add freak
-         • Shift+a - add N freaks
+         • a - add person
+         • Shift+a - add N persons
          • Shift+c - clear
          • c - calculate
          • e - edit (working after calculate)
-         • d - delete last freak
-         • Shift+d - delete all freaks
+         • d - delete last person
+         • Shift+d - delete all persons
          • Shift+<Escape> - close app
         '''
-        showinfo('FreakCalc shortcuts', text)
+        showinfo('PartyCalc shortcuts', text)
 
     def show_about(self):
-        text = 'FreakCalc ver. %s.\nApp for calculating party payments.\n2017.' % __version__
-        showinfo('About FreakCalc', text)
+        text = 'PartyCalc ver. %s.\nApp for calculating party payments.\n2017.' % __version__
+        showinfo('About PartyCalc', text)
+
+
+def run():
+    CalculatorGUI().mainloop()
 
 
 if __name__ == '__main__':
-    t = FreakGUI()
-    t.mainloop()
+    run()
