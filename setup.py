@@ -16,13 +16,16 @@ setup(
             'party-calc=PartyCalc.gui:run'
         ]
     },
-    python_requires='>=3.7',
+    python_requires='>=3.6',
+    install_requires=[
+       'dataclasses; python_version < "3.7"'
+    ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3.6'
     ]
 )
