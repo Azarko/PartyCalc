@@ -1,11 +1,10 @@
-"""
-Api for working with freak calculator.
-"""
+"""Api for working with party calculator."""
 
 __author__ = 'Boris Polyanskiy'
 
 from copy import copy
 from dataclasses import dataclass
+import re
 from typing import List
 
 
@@ -43,13 +42,30 @@ class PartyCalculator:
     def persons(self) -> List[Person]:
         return [person for person in self]
 
-    def add_person(self, name: str, balance: float = 0.0) -> None:
+    def select_person_name(self) -> str:
+        """Return first available name for person"""
+        counter = 1
+        for person_name in sorted(self.get_names()):
+            found = re.search(r'^person_(?P<index>[\d]{2})$', person_name)
+            if found:
+                index = int(found.group(1))
+                if index != counter:
+                    break
+                counter += 1
+                continue
+        return f'person_{counter:02d}'
+
+    def add_person(self, name: str = None, balance: float = 0.0) -> None:
         """Create and add new person.
 
         :param name: name of new person
         :param balance: initial balance of person
         :return: None
         """
+        if name is None:
+            name = self.select_person_name()
+        if not name:
+            raise ValueError('Name cannot be empty!')
         if name in self.get_names():
             raise ValueError(f'Person with name "{name}" already exists!')
         self._persons.append(Person(name, float(balance)))
@@ -102,11 +118,13 @@ class PartyCalculator:
         :param new_name: new name of person
         :return: None
         """
+        if not new_name:
+            raise ValueError('Name cannot be empty!')
         person = self._get_person_by_name(name)
         if new_name == name:
-            raise ValueError('Selected names are same!')
+            return
         if new_name in self.get_names():
-            raise ValueError(f'New name already exists: {new_name}!')
+            raise ValueError(f'Person with name "{new_name}" already exists!')
         person.name = new_name
 
     def get_payments_sum(self) -> float:

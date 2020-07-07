@@ -35,6 +35,22 @@ class TestPaymentCalculator(unittest.TestCase):
         self.assertEqual(len(self.calc.persons), 0)
         self.assertEqual(self.calc.each_pay, 0.0)
 
+    def test_select_name(self) -> None:
+        self.calc.add_person()
+        self.calc.add_person()
+        self.assertEqual(['person_01', 'person_02'], self.calc.get_names())
+        self.calc.add_person('person_03')
+        self.calc.add_person()
+        self.assertIn('person_04', self.calc.get_names())
+        self.calc.delete_person('person_02')
+        self.assertNotIn('person_02', self.calc.get_names())
+        self.calc.add_person()
+        self.assertIn('person_02', self.calc.get_names())
+        self.calc.change_person_name('person_02', 'person_2')
+        self.calc.add_person()
+        self.assertIn('person_02', self.calc.get_names())
+        self.assertIn('person_2', self.calc.get_names())
+
     def test_add_person(self) -> None:
         self.calc.add_person('test1')
         self.calc.add_person('test2', 15.0)
@@ -48,6 +64,10 @@ class TestPaymentCalculator(unittest.TestCase):
         self.calc.add_person('test4', 50)
         self.assertIsInstance(self.calc.persons[-1].balance, float)
         self.assertEqual(len(self.calc.get_names()), 3)
+        self.calc.add_person()
+        self.calc.add_person()
+        self.assertIn('person_01', self.calc.get_names())
+        self.assertIn('person_02', self.calc.get_names())
 
     def test_delete_person(self) -> None:
         self.calc.add_person('test1')
@@ -96,7 +116,7 @@ class TestPaymentCalculator(unittest.TestCase):
         self.calc.add_person('test2')
         self.assertEqual(self.calc.get_names(), ['test1', 'test2'])
         self.assertRaises(ValueError, self.calc.change_person_name, 'test3', 'test4')
-        self.assertRaises(ValueError, self.calc.change_person_name, 'test2', 'test2')
+        self.assertIsNone(self.calc.change_person_name('test2', 'test2'))
         self.calc.change_person_name('test2', 'test3')
         self.assertEqual(self.calc.get_names(), ['test1', 'test3'])
         self.assertRaises(ValueError, self.calc.change_person_name, 'test1', 'test3')

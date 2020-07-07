@@ -5,15 +5,16 @@ App for calculate party payments.
 
 __author__ = 'Boris Polyanskiy'
 
-from tkinter import *
+import tkinter as tk
 from tkinter.messagebox import askyesno, showinfo, showerror
 from tkinter.simpledialog import askinteger
+from typing import List
 
 from PartyCalc import __version__
 from PartyCalc.calculator import PartyCalculator
 
 
-class CalculatorFrame(Frame):
+class CalculatorFrame(tk.Frame):
     name_width = 35
     paid_width = 15
     mp_width = 15
@@ -22,147 +23,188 @@ class CalculatorFrame(Frame):
     mp_label_color_pos = 'tomato'
     mp_label_color_neg = 'pale green'
     mp_label_color_0 = 'CadetBlue2'
+    max_persons_count = 15
 
     def __init__(self, parent=None):
-        self.edit_flag = True
-        Frame.__init__(self, parent)
+        super().__init__(parent)
+
         self.calculator = PartyCalculator()
-        self.person_frames = []
-        self.create_toolbar()
+        self._person_frames = []
+        self.edit_mode_flag = True
+
+        # create base elements of frame
+        self.create_toolbar_frame()
         self.create_title_frame()
         self.create_total_frame()
-        self.person_index = 1
 
-    def create_toolbar(self):
-        toolbar = Frame(self)
-        toolbar.pack(side=TOP, fill=X)
-        self.calc_button = Button(toolbar, text='Calculate', cursor='hand2', command=self.calculate, state=DISABLED)
-        self.calc_button.pack(side=LEFT)
-        Button(toolbar, text='Add person', cursor='hand2', command=self.add_person).pack(side=LEFT)
-        Button(toolbar, text='Add N persons', cursor='hand2', command=self.add_n_persons).pack(side=LEFT)
-        Button(toolbar, text='Clear', cursor='hand2', command=self.clear).pack(side=LEFT)
-        Button(toolbar, text='Delete all persons', cursor='hand2', command=self.delete_all_persons).pack(side=LEFT)
-        self.edit_button = Button(toolbar, text='Edit', cursor='hand2', command=self.change_state, state=DISABLED)
-        self.edit_button.pack(side=LEFT)
-        self.toolbar = toolbar
-
-    def create_title_frame(self):
-        frame = Frame(self)
-        name = Entry(frame, width=self.name_width)
+    def create_title_frame(self) -> None:
+        """Create header of the persons table"""
+        frame = tk.Frame(self)
+        name = tk.Entry(frame, width=self.name_width)
         name.insert(0, 'Name')
-        name['state'] = DISABLED
-        name.pack(side=LEFT)
-        paid = Entry(frame, width=self.paid_width)
+        name['state'] = tk.DISABLED
+        name.pack(side=tk.LEFT)
+        paid = tk.Entry(frame, width=self.paid_width)
         paid.insert(0, 'Paid')
-        paid['state'] = DISABLED
-        paid.pack(side=LEFT)
-        Label(frame, width=self.mp_width, text='Need to pay', state=DISABLED).pack(side=LEFT)
-        Label(frame, width=self.del_width, text='Del', state=DISABLED).pack(side=LEFT)
-        frame.pack(side=TOP, anchor=W)
+        paid['state'] = tk.DISABLED
+        paid.pack(side=tk.LEFT)
+        tk.Label(frame, width=self.mp_width, text='Need to pay', state=tk.DISABLED).pack(side=tk.LEFT)
+        tk.Label(frame, width=self.del_width, text='Del', state=tk.DISABLED).pack(side=tk.LEFT)
+        frame.pack(side=tk.TOP, anchor=tk.W)
+
+    def create_toolbar_frame(self) -> None:
+        """Create the control toolbar on the top of the frame"""
+        self.toolbar = tk.Frame(self)
+        self.calc_button = tk.Button(self.toolbar, text='Calculate', cursor='hand2', command=self.calculate,
+                                     state=tk.DISABLED)
+        self.calc_button.pack(side=tk.LEFT)
+        tk.Button(self.toolbar, text='Add person', cursor='hand2', command=self.add_person).pack(side=tk.LEFT)
+        tk.Button(self.toolbar, text='Add N persons', cursor='hand2', command=self.add_n_persons).pack(side=tk.LEFT)
+        tk.Button(self.toolbar, text='Clear', cursor='hand2', command=self.reset_payments).pack(side=tk.LEFT)
+        tk.Button(self.toolbar, text='Reset all', cursor='hand2', command=self.reset).pack(side=tk.LEFT)
+        self.edit_button = tk.Button(self.toolbar, text='Edit', cursor='hand2', command=self.switch_edit_mode,
+                                     state=tk.DISABLED)
+        self.edit_button.pack(side=tk.LEFT)
+        self.toolbar.pack(side=tk.TOP, fill=tk.X)
 
     def create_total_frame(self):
-        self.total_frame = Frame(self)
-        Label(self.total_frame, text='Each member must pay:').pack(side=LEFT)
-        Label(self.total_frame, text='0.0').pack(side=LEFT)
+        """Create summary frame with results of calculation"""
+        self.total_frame = tk.Frame(self)
+        tk.Label(self.total_frame, text='Each member must pay:').pack(side=tk.LEFT)
+        tk.Label(self.total_frame, text='0.0').pack(side=tk.LEFT)
 
-    def add_person(self, event=None):
-        # Need redefine entry input for use with main window's shortcuts
-        def read_numbers(event=None):
-            # Check for digit and special symbols
-            if event.char.isalpha() or event.char in '!@#$%^&*()-=_+/|\\<>,`~':
-                return 'break'
-            if event.char == '.' and '.' in event.widget.get():
-                return 'break'
+    def _check_persons_limit(self) -> bool:
+        """Check if max_persons_count limit is reached
 
-        def read_symbols(event=None):
-            entry = event.widget
-            if event.char.isdigit() or event.char.isalpha():
-                if entry.selection_present():
-                    entry.delete(entry.index(SEL_FIRST), entry.index(SEL_LAST))
-                entry.insert(entry.index(INSERT), event.char)
-                return 'break'
+        If limit is reached - show warning (showinfo).
 
-        if not self.edit_flag:
+        :return: True if limit reached, else False
+        """
+        if len(self._person_frames) >= self.max_persons_count:
+            showinfo('Persons limit', f'Max count of persons ({self.max_persons_count}) is reached! Cannot add more!')
+            return True
+        return False
+
+    def add_person(self, event=None) -> None:
+        """Create and display new person"""
+
+        def validate_float(string: str) -> bool:
+            """Check if specified string can be converted to float
+
+            :param string: string
+            :return: True if validation passed else False
+            """
+            try:
+                float(string)
+            except ValueError:
+                return False
+            return True
+
+        if self._check_persons_limit():
             return
-        frame = Frame(self)
-        person_name = f'person_{self.person_index:02d}'
-        self.calculator.add_person(person_name)
-        self.person_index += 1
-        person_name = self.calculator[-1].name
-        name = Entry(frame, width=self.name_width)
-        name.insert(0, person_name)
-        name.bind('<KeyPress>', read_symbols)
-        name.pack(side=LEFT)
-        paid = Entry(frame, width=self.paid_width)
+        frame = tk.Frame(self)
+        person_name = self.calculator.select_person_name()
+        self.calculator.add_person(name=person_name)
+
+        name_var = tk.StringVar(value=person_name)
+        name = tk.Entry(frame, width=self.name_width, textvariable=name_var)
+        name.bind("<FocusOut>", lambda x: self.edit_name_callback(name_var, frame))
+        name.bind("<Return>", lambda x: self.focus())
+        name.pack(side=tk.LEFT)
+
+        paid = tk.Entry(frame, width=self.paid_width, validate="key")
+        paid.config(validatecommand=(paid.register(validate_float), "%P"))
         paid.insert(0, 0.0)
-        paid.bind('<KeyPress>', read_numbers)
-        paid.pack(side=LEFT)
-        Label(frame, width=self.mp_width, text='N/A', bg=self.mp_label_color_def).pack(side=LEFT)
-        Button(frame, text='Del', command=lambda: self.delete_person(frame), width=self.del_width).pack(side=LEFT)
-        frame.pack(side=TOP, anchor=W)
-        self.person_frames.append(frame)
-        if self.calc_button['state'] == DISABLED:
-            self.calc_button['state'] = NORMAL
+        paid.pack(side=tk.LEFT)
 
-    def add_n_persons(self, event=None):
-        if not self.edit_flag:
+        tk.Label(frame, width=self.mp_width, text='N/A', bg=self.mp_label_color_def).pack(side=tk.LEFT)
+        tk.Button(frame, text='Del', command=lambda: self.delete_person(frame), width=self.del_width).pack(side=tk.LEFT)
+        frame.pack(side=tk.TOP, anchor=tk.W)
+        self._person_frames.append(frame)
+        self.calc_button['state'] = tk.NORMAL
+
+    def edit_name_callback(self, string_var: tk.StringVar, frame: tk.Frame) -> None:
+        """Callback for change person name (Entry)
+
+        :param string_var: StringVar of Entry
+        :param frame: parent frame
+        :return: None
+        """
+        person_name = self.calculator.persons[self._person_frames.index(frame)].name
+        try:
+            self.calculator.change_person_name(person_name, string_var.get())
+        except ValueError as err:
+            showerror('Error', err)
+            string_var.set(person_name)
+
+    def add_n_persons(self, event=None) -> None:
+        """Create and display few persons"""
+        if self._check_persons_limit():
             return
-        n = askinteger('Enter count of persons', 'Count of new persons')
+        available_count = self.max_persons_count - len(self._person_frames)
+        if available_count == 1:
+            showinfo('Persons limit', 'Only one person is added')
+            self.add_person()
+            self.update()
+            return
+        available_str = f'1-{available_count}' if available_count > 1 else '1'
+        n = askinteger('Enter count of persons', f'Count of new persons ({available_str})')
         if n is None:
             return
         elif n <= 0:
             showerror('Error!', 'Count must be positive integer!')
-            raise ValueError('Count must be positive integer!')
-        elif n > 15:
-            showerror('Error!', 'Count too big! Please input value between 1 and 15')
-            raise ValueError('Count too big!')
+            return
+        elif n > self.max_persons_count:
+            showerror('Error!', f'Count too big! Please input value between 1 and {self.max_persons_count}')
+            return
+        if len(self._person_frames) + n > self.max_persons_count:
+            n = available_count
+            showinfo('Persons limit', f'Max count of persons is {self.max_persons_count}, {n} members will be added')
         for count in range(n):
             self.add_person()
             self.update()
 
-    def delete_person(self, frame):
-        self.calculator.delete_person(self.calculator[self.person_frames.index(frame)].name)
-        self.person_frames.remove(frame)
+    def delete_person(self, frame) -> None:
+        """Delete person and linked frame"""
+        self.calculator.delete_person(self.calculator[self._person_frames.index(frame)].name)
+        self._person_frames.remove(frame)
         frame.pack_forget()
-        if not len(self.person_frames):
-            self.calc_button['state'] = DISABLED
+        if not len(self._person_frames):
+            self.calc_button['state'] = tk.DISABLED
         self.focus_set()
 
-    def delete_last_person(self, event=None):
-        if len(self.person_frames):
-            self.delete_person(self.person_frames[-1])
-        self.person_index = 1
-
-    def delete_all_persons(self, event=None):
-        if askyesno('Really delete', 'Are you really want to delete all members?'):
-            for frame in self.person_frames:
-                frame.pack_forget()
-            self.person_frames = []
+    def reset(self, event=None) -> None:
+        """Reset all data"""
+        if askyesno('Really reset', 'Do you really want to reset all data?'):
             self.calculator.reset()
-            self.calc_button['state'] = DISABLED
+            for frame in self._person_frames:
+                frame.pack_forget()
+            self._person_frames = []
+            self.calc_button['state'] = tk.DISABLED
 
-    def clear(self, event=None):
-        if not self.edit_flag:
-            return
-        if askyesno('Really clear', 'Are you really want to clear all payment information?'):
+    def reset_payments(self, event=None) -> None:
+        """Reset payments data"""
+        if askyesno('Really reset', 'Do you really want to reset all payment information?'):
             for entry in self.get_pay_entries():
                 entry.delete(0, len(entry.get()))
                 entry.insert(0, 0.0)
             self.reset_mp_labels_color()
 
-    def get_pay_entries(self):
-        return [frame.winfo_children()[1] for frame in self.person_frames]
+    def get_pay_entries(self) -> List[tk.Entry]:
+        """Return "paid" entries of all person frames"""
+        return [frame.winfo_children()[1] for frame in self._person_frames]
 
-    def get_mp_labels(self):
-        return [frame.winfo_children()[2] for frame in self.person_frames]
+    def get_mp_labels(self) -> List[tk.Label]:
+        """Return "must pay" entries of all person frames"""
+        return [frame.winfo_children()[2] for frame in self._person_frames]
 
-    def reset_mp_labels_color(self):
+    def reset_mp_labels_color(self) -> None:
+        """Reset color of "must pay" entries of all person frames"""
         for label in self.get_mp_labels():
             label['bg'] = self.mp_label_color_def
 
-    def calculate(self, event=None):
-        if not self.edit_flag or not self.calculator:
-            return
+    def calculate(self, event=None) -> None:
+        """Calculate "must pay" for all persons"""
         for counter, pay_entry in enumerate(self.get_pay_entries()):
             try:
                 person_balance = float(pay_entry.get())
@@ -178,117 +220,80 @@ class CalculatorFrame(Frame):
                 mp_label['bg'] = self.mp_label_color_pos
             else:
                 mp_label['bg'] = self.mp_label_color_0
-        self.change_state()
+        self.switch_edit_mode()
 
-    def change_state(self, event=None):
+    def switch_edit_mode(self, event=None) -> None:
+        """Event handler to switch state of frame to enabled/disabled (edit/readonly mode)"""
         def change_element(element):
-            element['state'] = DISABLED if element['state'] == NORMAL else NORMAL
+            element['state'] = tk.DISABLED if element['state'] == tk.NORMAL else tk.NORMAL
 
-        if event and self.edit_flag:
+        if event and self.edit_mode_flag:
             return
-        if not self.edit_flag:
+        if not self.edit_mode_flag:
             self.reset_mp_labels_color()
             self.total_frame.pack_forget()
         else:
             label = self.total_frame.winfo_children()[1]
             label['text'] = round(self.calculator.each_pay, 2)
-            self.total_frame.pack(anchor=W)
+            self.total_frame.pack(anchor=tk.W)
 
         for element in self.toolbar.winfo_children():
             change_element(element)
-        for frame in self.person_frames:
+        for frame in self._person_frames:
             for element in frame.winfo_children()[0:2] + [frame.winfo_children()[3]]:
                 change_element(element)
-        self.edit_flag = not self.edit_flag
+        self.edit_mode_flag = not self.edit_mode_flag
 
 
-class CalculatorGUI(Tk):
+class CalculatorGUI(tk.Tk):
     def __init__(self):
-        Tk.__init__(self)
+        tk.Tk.__init__(self)
+        self.menu = None
         self.title('Party Calculator')
         self.resizable(width=False, height=False)
         self.create_menu()
         self.calculator_frame = CalculatorFrame(self)
-        self.set_binds()
-        self.calculator_frame.pack(fill=Y, expand=YES, )
+        self.calculator_frame.pack(fill=tk.Y, expand=tk.YES)
         self.create_footer()
 
     def create_footer(self):
-        toolbar = Frame(self)
-        Label(self, text='PartyCalc ver. %s' % __version__).pack(side=RIGHT)
-        toolbar.pack(side=BOTTOM, fill=X)
-
-    def set_binds(self):
-        unset_control_binds = ['a', 'A', 'c', 'C', 'e', 'E', 'd', 'D']
-        for bind in unset_control_binds:
-            self.bind('<Control-%s>' % bind, lambda event: None)
-        self.bind('a', self.calculator_frame.add_person)
-        self.bind('A', self.calculator_frame.add_n_persons)
-        self.bind('c', self.calculator_frame.calculate)
-        self.bind('C', self.calculator_frame.clear)
-        self.bind('e', self.calculator_frame.change_state)
-        self.bind('d', self.calculator_frame.delete_last_person)
-        self.bind('D', self.calculator_frame.delete_all_persons)
-        self.bind('<Return>', lambda event: self.focus_set())
-        self.bind('<Escape>', lambda event: self.focus_set())
-        self.bind('<Shift-Escape>', lambda event: self.quit())
+        toolbar = tk.Frame(self)
+        tk.Label(self, text='PartyCalc ver. %s' % __version__).pack(side=tk.RIGHT)
+        toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def create_menu(self):
-        self.menu = Menu(self)
+        self.menu = tk.Menu(self)
         self.config(menu=self.menu)
         self.create_menu_file()
         self.create_menu_about()
 
     def create_menu_file(self):
-        menu = Menu(self.menu, tearoff=False)
-        menu.add_command(label='Save', command=self.not_ready)
-        menu.add_command(label='Save as...', command=self.not_ready)
-        menu.add_command(label='Load', command=self.not_ready)
-        menu.add_separator()
+        menu = tk.Menu(self.menu, tearoff=False)
         menu.add_command(label='Exit', command=self.quit)
         self.menu.add_cascade(label='File', underline=0, menu=menu)
 
     def create_menu_about(self):
-        menu = Menu(self.menu, tearoff=False)
+        menu = tk.Menu(self.menu, tearoff=False)
         menu.add_command(label='Help', command=self.show_help)
-        menu.add_command(label='Shortcuts', command=self.show_shortcuts)
         menu.add_separator()
         menu.add_command(label='About', command=self.show_about)
         self.menu.add_cascade(label='About', underline=0, menu=menu)
-
-    def not_ready(self):
-        print('Not ready')
 
     @staticmethod
     def show_help():
         text = '''
         How to use Party Calculator:
          - press 'Add person' for add new member;
-         - set his name and pay-value;
+         - set his/her name and pay-value;
          - repeat it for all you party-members;
          - press calculate and watch result;
          - if you need change something - press 'Edit'
 
-        Press 'Clean' for reset all pays.
-        Press 'Delete all persons' for delete all members.
+        Press 'Clear' for reset all pays.
+        Press 'Reset all' for delete all members.
         Press 'Add N persons' for add few members at same time.
         '''
         showinfo('PartyCalc version %s' % __version__, text)
-
-    @staticmethod
-    def show_shortcuts():
-        text = '''
-        Shortcuts:
-         • a - add person
-         • Shift+a - add N persons
-         • Shift+c - clear
-         • c - calculate
-         • e - edit (working after calculate)
-         • d - delete last person
-         • Shift+d - delete all persons
-         • Shift+<Escape> - close app
-        '''
-        showinfo('PartyCalc shortcuts', text)
 
     @staticmethod
     def show_about():
