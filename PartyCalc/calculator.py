@@ -24,7 +24,6 @@ class Person:
         :param payment: how much each person must to pay
         :return: how much this person must to pay
         """
-
         self.need_to_pay = float(payment - self.balance)
         return self.need_to_pay
 
@@ -48,10 +47,9 @@ class PartyCalculator:
         """Create and add new person.
 
         :param name: name of new person
-        :param balance: start balance of person
+        :param balance: initial balance of person
         :return: None
         """
-
         if name in self.get_names():
             raise ValueError(f'Person with name "{name}" already exists!')
         self._persons.append(Person(name, float(balance)))
@@ -62,18 +60,18 @@ class PartyCalculator:
         :param name: name of person
         :return: None
         """
-
         if name not in self.get_names():
             raise ValueError(f"Person with name '{name}' doesn't exist!")
         self._persons.remove(self._get_person_by_name(name))
 
     def get_names(self) -> List[str]:
-        """Return list with person names."""
+        """Return list with persons names."""
         return [person.name for person in self._persons]
 
     def reset(self) -> None:
-        """Reinitialize class instance (reset all data)."""
-        self.__init__()
+        """Reset all instance data"""
+        self._persons = []
+        self.each_pay = 0.0
 
     def _get_person_by_name(self, name: str) -> Person:
         """Return person object with selected name
@@ -81,7 +79,6 @@ class PartyCalculator:
         :param name: name of person
         :return: Person object
         """
-
         if name not in self.get_names():
             raise ValueError(f"Person with name '{name}' doesn't exist!")
         for person in self._persons:
@@ -95,7 +92,6 @@ class PartyCalculator:
         :param balance: new balance
         :return: None
         """
-
         person = self._get_person_by_name(name)
         person.balance = balance
 
@@ -106,13 +102,11 @@ class PartyCalculator:
         :param new_name: new name of person
         :return: None
         """
-
+        person = self._get_person_by_name(name)
         if new_name == name:
             raise ValueError('Selected names are same!')
         if new_name in self.get_names():
             raise ValueError(f'New name already exists: {new_name}!')
-
-        person = self._get_person_by_name(name)
         person.name = new_name
 
     def get_payments_sum(self) -> float:

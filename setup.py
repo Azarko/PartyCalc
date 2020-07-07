@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+import os
 from setuptools import setup
 
 from PartyCalc import __author__, __version__
+
+base_name = os.path.abspath(os.path.dirname(__file__))
 
 
 setup(
@@ -9,7 +12,7 @@ setup(
     version=__version__,
     author=__author__,
     description='Utility to calculate party payments',
-    long_description=open('README.md', encoding='utf-8').read(),
+    long_description=open(os.path.join(base_name, 'README.md'), encoding='utf-8').read(),
     packages=['PartyCalc'],
     entry_points={
         'console_scripts': [

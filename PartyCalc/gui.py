@@ -12,8 +12,6 @@ from tkinter.simpledialog import askinteger
 from PartyCalc import __version__
 from PartyCalc.calculator import PartyCalculator
 
-# TODO: save, load
-
 
 class CalculatorFrame(Frame):
     name_width = 35
@@ -261,7 +259,8 @@ class CalculatorGUI(Tk):
     def not_ready(self):
         print('Not ready')
 
-    def show_help(self):
+    @staticmethod
+    def show_help():
         text = '''
         How to use Party Calculator:
          - press 'Add person' for add new member;
@@ -276,7 +275,8 @@ class CalculatorGUI(Tk):
         '''
         showinfo('PartyCalc version %s' % __version__, text)
 
-    def show_shortcuts(self):
+    @staticmethod
+    def show_shortcuts():
         text = '''
         Shortcuts:
          • a - add person
@@ -290,8 +290,9 @@ class CalculatorGUI(Tk):
         '''
         showinfo('PartyCalc shortcuts', text)
 
-    def show_about(self):
-        text = 'PartyCalc ver. %s.\nApp for calculating party payments.\n2017.' % __version__
+    @staticmethod
+    def show_about():
+        text = 'PartyCalc ver. %s.\nApp for calculating party payments.' % __version__
         showinfo('About PartyCalc', text)
 
 
