@@ -6,6 +6,7 @@ App for calculate party payments.
 __author__ = 'Boris Polyanskiy'
 
 import csv
+import os
 import tkinter as tk
 from tkinter.filedialog import askopenfile, asksaveasfilename
 from tkinter.messagebox import askyesno, showinfo, showerror
@@ -259,7 +260,8 @@ class CalculatorFrame(tk.Frame):
 
     def save_csv(self):
         """Save persons data to selected csv file"""
-        file_name = asksaveasfilename(defaultextension='.csv', filetype=(('CSV files', '*.csv'),))
+        file_name = asksaveasfilename(defaultextension='.csv', filetype=(('CSV files', '*.csv'),),
+                                      initialdir=os.getcwd())
 
         if file_name:
             self.update_calculator()
@@ -270,7 +272,7 @@ class CalculatorFrame(tk.Frame):
 
     def load_csv(self):
         """Load persons data from selected csv file"""
-        stream = askopenfile(filetype=(('CSV files', '*.csv'),))
+        stream = askopenfile(filetype=(('CSV files', '*.csv'),), initialdir=os.getcwd())
         if stream:
             reader = csv.reader(stream)
             data = [*reader]
