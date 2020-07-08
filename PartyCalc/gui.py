@@ -85,7 +85,7 @@ class CalculatorFrame(tk.Frame):
             return True
         return False
 
-    def add_person(self, event=None) -> None:
+    def add_person(self, name=None, balance=0.0) -> None:
         """Create and display new person"""
 
         def validate_float(string: str) -> bool:
@@ -94,17 +94,21 @@ class CalculatorFrame(tk.Frame):
             :param string: string
             :return: True if validation passed else False
             """
-            try:
-                float(string)
-            except ValueError:
-                return False
+            if string:
+                try:
+                    float(string)
+                except ValueError:
+                    return False
             return True
 
         if self._check_persons_limit():
             return
         frame = tk.Frame(self)
-        person_name = self.calculator.select_person_name()
-        self.calculator.add_person(name=person_name)
+        if name and not self.calculator.is_person_exists(name):
+            person_name = name
+        else:
+            person_name = self.calculator.select_person_name()
+        self.calculator.add_person(name=person_name, balance=balance)
 
         name_var = tk.StringVar(value=person_name)
         name = tk.Entry(frame, width=self.name_width, textvariable=name_var)
@@ -137,7 +141,7 @@ class CalculatorFrame(tk.Frame):
             showerror('Error', err)
             string_var.set(person_name)
 
-    def add_n_persons(self, event=None) -> None:
+    def add_n_persons(self) -> None:
         """Create and display few persons"""
         if self._check_persons_limit():
             return
@@ -173,7 +177,7 @@ class CalculatorFrame(tk.Frame):
             self.calc_button['state'] = tk.DISABLED
         self.focus_set()
 
-    def reset(self, event=None) -> None:
+    def reset(self) -> None:
         """Reset all data"""
         if askyesno('Really reset', 'Do you really want to reset all data?'):
             self.calculator.reset()
@@ -182,7 +186,7 @@ class CalculatorFrame(tk.Frame):
             self._person_frames = []
             self.calc_button['state'] = tk.DISABLED
 
-    def reset_payments(self, event=None) -> None:
+    def reset_payments(self) -> None:
         """Reset payments data"""
         if askyesno('Really reset', 'Do you really want to reset all payment information?'):
             for entry in self.get_pay_entries():
@@ -203,7 +207,7 @@ class CalculatorFrame(tk.Frame):
         for label in self.get_mp_labels():
             label['bg'] = self.mp_label_color_def
 
-    def calculate(self, event=None) -> None:
+    def calculate(self) -> None:
         """Calculate "must pay" for all persons"""
         for counter, pay_entry in enumerate(self.get_pay_entries()):
             try:
@@ -222,13 +226,11 @@ class CalculatorFrame(tk.Frame):
                 mp_label['bg'] = self.mp_label_color_0
         self.switch_edit_mode()
 
-    def switch_edit_mode(self, event=None) -> None:
+    def switch_edit_mode(self) -> None:
         """Event handler to switch state of frame to enabled/disabled (edit/readonly mode)"""
         def change_element(element):
             element['state'] = tk.DISABLED if element['state'] == tk.NORMAL else tk.NORMAL
 
-        if event and self.edit_mode_flag:
-            return
         if not self.edit_mode_flag:
             self.reset_mp_labels_color()
             self.total_frame.pack_forget()
@@ -251,8 +253,8 @@ class CalculatorGUI(tk.Tk):
         self.menu = None
         self.title('Party Calculator')
         self.resizable(width=False, height=False)
-        self.create_menu()
         self.calculator_frame = CalculatorFrame(self)
+        self.create_menu()
         self.calculator_frame.pack(fill=tk.Y, expand=tk.YES)
         self.create_footer()
 
