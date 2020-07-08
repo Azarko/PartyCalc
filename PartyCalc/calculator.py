@@ -10,6 +10,8 @@ from typing import List
 
 @dataclass
 class Person:
+    """Dataclass which describes each person's parameters"""
+
     name: str
     balance: float = 0.0
     need_to_pay = 0.0
@@ -35,7 +37,7 @@ class PartyCalculator:
     def __repr__(self) -> str:
         return f'Payment calculator with {len(self._persons)} persons and total payments {self.get_payments_sum()}'
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> Person:
         return copy(self._persons[item])
 
     @property
@@ -55,6 +57,14 @@ class PartyCalculator:
                 continue
         return f'person_{counter:02d}'
 
+    def is_person_exists(self, name: str) -> bool:
+        """Check if specified person exists
+
+        :param name: name of person
+        :return: True if person already exists else False
+        """
+        return name in self.get_names()
+
     def add_person(self, name: str = None, balance: float = 0.0) -> None:
         """Create and add new person.
 
@@ -66,7 +76,7 @@ class PartyCalculator:
             name = self.select_person_name()
         if not name:
             raise ValueError('Name cannot be empty!')
-        if name in self.get_names():
+        if self.is_person_exists(name):
             raise ValueError(f'Person with name "{name}" already exists!')
         self._persons.append(Person(name, float(balance)))
 
@@ -76,7 +86,7 @@ class PartyCalculator:
         :param name: name of person
         :return: None
         """
-        if name not in self.get_names():
+        if not self.is_person_exists(name):
             raise ValueError(f"Person with name '{name}' doesn't exist!")
         self._persons.remove(self._get_person_by_name(name))
 
@@ -95,7 +105,7 @@ class PartyCalculator:
         :param name: name of person
         :return: Person object
         """
-        if name not in self.get_names():
+        if not self.is_person_exists(name):
             raise ValueError(f"Person with name '{name}' doesn't exist!")
         for person in self._persons:
             if person.name == name:
@@ -123,7 +133,7 @@ class PartyCalculator:
         person = self._get_person_by_name(name)
         if new_name == name:
             return
-        if new_name in self.get_names():
+        if self.is_person_exists(new_name):
             raise ValueError(f'Person with name "{new_name}" already exists!')
         person.name = new_name
 

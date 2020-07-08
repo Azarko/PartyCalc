@@ -51,6 +51,12 @@ class TestPaymentCalculator(unittest.TestCase):
         self.assertIn('person_02', self.calc.get_names())
         self.assertIn('person_2', self.calc.get_names())
 
+    def test_is_person_exists(self):
+        self.assertFalse(self.calc.is_person_exists('test2'))
+        self.calc.add_person('test1')
+        self.assertTrue(self.calc.is_person_exists('test1'))
+        self.assertFalse(self.calc.is_person_exists('test2'))
+
     def test_add_person(self) -> None:
         self.calc.add_person('test1')
         self.calc.add_person('test2', 15.0)
