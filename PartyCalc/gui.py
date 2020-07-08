@@ -5,7 +5,9 @@ App for calculate party payments.
 
 __author__ = 'Boris Polyanskiy'
 
+import csv
 import tkinter as tk
+from tkinter.filedialog import askopenfile, asksaveasfilename
 from tkinter.messagebox import askyesno, showinfo, showerror
 from tkinter.simpledialog import askinteger
 from typing import List
@@ -73,7 +75,7 @@ class CalculatorFrame(tk.Frame):
         tk.Label(self.total_frame, text='Each member must pay:').pack(side=tk.LEFT)
         tk.Label(self.total_frame, text='0.0').pack(side=tk.LEFT)
 
-    def _check_persons_limit(self) -> bool:
+    def _check_persons_limit(self, show_info=True) -> bool:
         """Check if max_persons_count limit is reached
 
         If limit is reached - show warning (showinfo).
@@ -81,7 +83,11 @@ class CalculatorFrame(tk.Frame):
         :return: True if limit reached, else False
         """
         if len(self._person_frames) >= self.max_persons_count:
-            showinfo('Persons limit', f'Max count of persons ({self.max_persons_count}) is reached! Cannot add more!')
+            if show_info:
+                showinfo(
+                    'Persons limit',
+                    f'Max count of persons ({self.max_persons_count}) is reached! Cannot add more!'
+                )
             return True
         return False
 
@@ -103,12 +109,13 @@ class CalculatorFrame(tk.Frame):
 
         if self._check_persons_limit():
             return
+        person_name = name if name is not None else self.calculator.select_person_name()
+        try:
+            self.calculator.add_person(name=person_name, balance=balance)
+        except ValueError as err:
+            showerror('Error', err)
+            return
         frame = tk.Frame(self)
-        if name and not self.calculator.is_person_exists(name):
-            person_name = name
-        else:
-            person_name = self.calculator.select_person_name()
-        self.calculator.add_person(name=person_name, balance=balance)
 
         name_var = tk.StringVar(value=person_name)
         name = tk.Entry(frame, width=self.name_width, textvariable=name_var)
@@ -118,7 +125,7 @@ class CalculatorFrame(tk.Frame):
 
         paid = tk.Entry(frame, width=self.paid_width, validate="key")
         paid.config(validatecommand=(paid.register(validate_float), "%P"))
-        paid.insert(0, 0.0)
+        paid.insert(0, balance)
         paid.pack(side=tk.LEFT)
 
         tk.Label(frame, width=self.mp_width, text='N/A', bg=self.mp_label_color_def).pack(side=tk.LEFT)
@@ -207,14 +214,18 @@ class CalculatorFrame(tk.Frame):
         for label in self.get_mp_labels():
             label['bg'] = self.mp_label_color_def
 
-    def calculate(self) -> None:
-        """Calculate "must pay" for all persons"""
+    def update_calculator(self) -> None:
+        """Take data by pay entries and update paid info in PartyCalculator instance"""
         for counter, pay_entry in enumerate(self.get_pay_entries()):
             try:
                 person_balance = float(pay_entry.get())
             except ValueError:
                 person_balance = 0.0
             self.calculator.set_person_balance(self.calculator[counter].name, person_balance)
+
+    def calculate(self) -> None:
+        """Calculate "must pay" for all persons"""
+        self.update_calculator()
         self.calculator.calculate_payments()
         for person, mp_label in zip(self.calculator, self.get_mp_labels()):
             mp_label['text'] = '%.2f' % round(person.need_to_pay, 2)
@@ -246,6 +257,38 @@ class CalculatorFrame(tk.Frame):
                 change_element(element)
         self.edit_mode_flag = not self.edit_mode_flag
 
+    def save_csv(self):
+        """Save persons data to selected csv file"""
+        file_name = asksaveasfilename(defaultextension='.csv', filetype=(('CSV files', '*.csv'),))
+
+        if file_name:
+            self.update_calculator()
+            with open(file_name, mode='w', encoding='utf-8', newline='') as stream:
+                writer = csv.writer(stream)
+                writer.writerow(('person', 'balance'))
+                writer.writerows(self.calculator.to_list())
+
+    def load_csv(self):
+        """Load persons data from selected csv file"""
+        stream = askopenfile(filetype=(('CSV files', '*.csv'),))
+        if stream:
+            reader = csv.reader(stream)
+            data = [*reader]
+            if data and len(data[0]) == 2 and data[0][1] == 'balance':
+                # skip header
+                data = data[1:]
+            for counter, row in enumerate(data):
+                if len(row) != 2:
+                    continue
+                if self._check_persons_limit(show_info=False):
+                    showinfo(
+                        'Persons limit',
+                        f'Stop importing at line {counter + 1}: persons limit ({self.max_persons_count}) is reached\n'
+                        f'{len(data) - counter} line(s) ignored'
+                    )
+                    break
+                self.add_person(name=row[0], balance=row[1])
+
 
 class CalculatorGUI(tk.Tk):
     def __init__(self):
@@ -271,6 +314,9 @@ class CalculatorGUI(tk.Tk):
 
     def create_menu_file(self):
         menu = tk.Menu(self.menu, tearoff=False)
+        menu.add_command(label='Export csv', command=self.calculator_frame.save_csv)
+        menu.add_command(label='Import csv', command=self.calculator_frame.load_csv)
+        menu.add_separator()
         menu.add_command(label='Exit', command=self.quit)
         self.menu.add_cascade(label='File', underline=0, menu=menu)
 

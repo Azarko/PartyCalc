@@ -146,6 +146,13 @@ class TestPaymentCalculator(unittest.TestCase):
         self.assertEqual(self.calc.persons[1].need_to_pay, 15.0)
         self.assertEqual(self.calc.persons[2].need_to_pay, -5.0)
 
+    def test_to_list(self):
+        self.assertFalse(self.calc.to_list())
+        reference = [('test_2', 15.0), ('test_1', 10.0), ('test_3', 12.0)]
+        for data in reference:
+            self.calc.add_person(*data)
+        self.assertEqual(reference, self.calc.to_list())
+
 
 if __name__ == "__main__":
     unittest.main()

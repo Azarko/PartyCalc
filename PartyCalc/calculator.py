@@ -5,7 +5,7 @@ __author__ = 'Boris Polyanskiy'
 from copy import copy
 from dataclasses import dataclass
 import re
-from typing import List
+from typing import List, Tuple
 
 
 @dataclass
@@ -44,6 +44,13 @@ class PartyCalculator:
     def persons(self) -> List[Person]:
         return [person for person in self]
 
+    def to_list(self) -> List[Tuple[str, float]]:
+        """Convert persons data to csv-compatible format
+
+        :return: [(person.name, person.balance), (...)]
+        """
+        return [(person.name, person.balance) for person in self.persons]
+
     def select_person_name(self) -> str:
         """Return first available name for person"""
         counter = 1
@@ -74,11 +81,15 @@ class PartyCalculator:
         """
         if name is None:
             name = self.select_person_name()
+        try:
+            balance = float(balance)
+        except ValueError:
+            raise ValueError(f'Balance must me float, "{balance}" passed!') from None
         if not name:
             raise ValueError('Name cannot be empty!')
         if self.is_person_exists(name):
             raise ValueError(f'Person with name "{name}" already exists!')
-        self._persons.append(Person(name, float(balance)))
+        self._persons.append(Person(name=name, balance=balance))
 
     def delete_person(self, name: str) -> None:
         """Delete person with name `name`.
