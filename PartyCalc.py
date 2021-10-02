@@ -2,7 +2,7 @@
 
 __author__ = 'Boris Polyanskiy'
 
-from PartyCalc import gui
+from party_calc import gui
 
 
 if __name__ == "__main__":

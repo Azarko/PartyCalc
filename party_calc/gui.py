@@ -8,13 +8,13 @@ __author__ = 'Boris Polyanskiy'
 import csv
 import os
 import tkinter as tk
-from tkinter.filedialog import askopenfile, asksaveasfilename
-from tkinter.messagebox import askyesno, showinfo, showerror
-from tkinter.simpledialog import askinteger
-from typing import List
+from tkinter import filedialog
+from tkinter import messagebox
+from tkinter import simpledialog
+import typing
 
-from PartyCalc import __version__
-from PartyCalc.calculator import PartyCalculator
+import party_calc
+from party_calc import calculator
 
 
 class CalculatorFrame(tk.Frame):
@@ -31,7 +31,7 @@ class CalculatorFrame(tk.Frame):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.calculator = PartyCalculator()
+        self.calculator = calculator.PartyCalculator()
         self._person_frames = []
         self.edit_mode_flag = True
 
@@ -85,7 +85,7 @@ class CalculatorFrame(tk.Frame):
         """
         if len(self._person_frames) >= self.max_persons_count:
             if show_info:
-                showinfo(
+                messagebox.showinfo(
                     'Persons limit',
                     f'Max count of persons ({self.max_persons_count}) is reached! Cannot add more!'
                 )
@@ -114,7 +114,7 @@ class CalculatorFrame(tk.Frame):
         try:
             self.calculator.add_person(name=person_name, balance=balance)
         except ValueError as err:
-            showerror('Error', err)
+            messagebox.showerror('Error', err)
             return
         frame = tk.Frame(self)
 
@@ -146,7 +146,7 @@ class CalculatorFrame(tk.Frame):
         try:
             self.calculator.change_person_name(person_name, string_var.get())
         except ValueError as err:
-            showerror('Error', err)
+            messagebox.showerror('Error', err)
             string_var.set(person_name)
 
     def add_n_persons(self) -> None:
@@ -155,23 +155,25 @@ class CalculatorFrame(tk.Frame):
             return
         available_count = self.max_persons_count - len(self._person_frames)
         if available_count == 1:
-            showinfo('Persons limit', 'Only one person is added')
+            messagebox.showinfo('Persons limit', 'Only one person is added')
             self.add_person()
             self.update()
             return
         available_str = f'1-{available_count}' if available_count > 1 else '1'
-        n = askinteger('Enter count of persons', f'Count of new persons ({available_str})')
+        n = simpledialog.askinteger('Enter count of persons', f'Count of new persons ({available_str})')
         if n is None:
             return
         elif n <= 0:
-            showerror('Error!', 'Count must be positive integer!')
+            messagebox.showerror('Error!', 'Count must be positive integer!')
             return
         elif n > self.max_persons_count:
-            showerror('Error!', f'Count too big! Please input value between 1 and {self.max_persons_count}')
+            messagebox.showerror('Error!', f'Count too big! Please input value between 1 and {self.max_persons_count}')
             return
         if len(self._person_frames) + n > self.max_persons_count:
             n = available_count
-            showinfo('Persons limit', f'Max count of persons is {self.max_persons_count}, {n} members will be added')
+            messagebox.showinfo(
+                'Persons limit', f'Max count of persons is {self.max_persons_count}, {n} members will be added',
+            )
         for count in range(n):
             self.add_person()
             self.update()
@@ -187,7 +189,7 @@ class CalculatorFrame(tk.Frame):
 
     def reset(self) -> None:
         """Reset all data"""
-        if askyesno('Really reset', 'Do you really want to reset all data?'):
+        if messagebox.askyesno('Really reset', 'Do you really want to reset all data?'):
             self.calculator.reset()
             for frame in self._person_frames:
                 frame.pack_forget()
@@ -196,17 +198,17 @@ class CalculatorFrame(tk.Frame):
 
     def reset_payments(self) -> None:
         """Reset payments data"""
-        if askyesno('Really reset', 'Do you really want to reset all payment information?'):
+        if messagebox.askyesno('Really reset', 'Do you really want to reset all payment information?'):
             for entry in self.get_pay_entries():
                 entry.delete(0, len(entry.get()))
                 entry.insert(0, 0.0)
             self.reset_mp_labels_color()
 
-    def get_pay_entries(self) -> List[tk.Entry]:
+    def get_pay_entries(self) -> typing.List[tk.Entry]:
         """Return "paid" entries of all person frames"""
         return [frame.winfo_children()[1] for frame in self._person_frames]
 
-    def get_mp_labels(self) -> List[tk.Label]:
+    def get_mp_labels(self) -> typing.List[tk.Label]:
         """Return "must pay" entries of all person frames"""
         return [frame.winfo_children()[2] for frame in self._person_frames]
 
@@ -260,7 +262,7 @@ class CalculatorFrame(tk.Frame):
 
     def save_csv(self):
         """Save persons data to selected csv file"""
-        file_name = asksaveasfilename(defaultextension='.csv', filetype=(('CSV files', '*.csv'),),
+        file_name = filedialog.asksaveasfilename(defaultextension='.csv', filetype=(('CSV files', '*.csv'),),
                                       initialdir=os.getcwd())
 
         if file_name:
@@ -272,7 +274,7 @@ class CalculatorFrame(tk.Frame):
 
     def load_csv(self):
         """Load persons data from selected csv file"""
-        stream = askopenfile(filetype=(('CSV files', '*.csv'),), initialdir=os.getcwd())
+        stream = filedialog.askopenfile(filetype=(('CSV files', '*.csv'),), initialdir=os.getcwd())
         if stream:
             reader = csv.reader(stream)
             data = [*reader]
@@ -283,7 +285,7 @@ class CalculatorFrame(tk.Frame):
                 if len(row) != 2:
                     continue
                 if self._check_persons_limit(show_info=False):
-                    showinfo(
+                    messagebox.showinfo(
                         'Persons limit',
                         f'Stop importing at line {counter + 1}: persons limit ({self.max_persons_count}) is reached\n'
                         f'{len(data) - counter} line(s) ignored'
@@ -305,7 +307,7 @@ class CalculatorGUI(tk.Tk):
 
     def create_footer(self):
         toolbar = tk.Frame(self)
-        tk.Label(self, text='PartyCalc ver. %s' % __version__).pack(side=tk.RIGHT)
+        tk.Label(self, text='party_calc ver. %s' % party_calc.__version__).pack(side=tk.RIGHT)
         toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def create_menu(self):
@@ -343,12 +345,12 @@ class CalculatorGUI(tk.Tk):
         Press 'Reset all' for delete all members.
         Press 'Add N persons' for add few members at same time.
         '''
-        showinfo('PartyCalc version %s' % __version__, text)
+        messagebox.showinfo('party_calc version %s' % party_calc.__version__, text)
 
     @staticmethod
     def show_about():
-        text = 'PartyCalc ver. %s.\nApp for calculating party payments.' % __version__
-        showinfo('About PartyCalc', text)
+        text = 'party_calc ver. %s.\nApp for calculating party payments.' % party_calc.__version__
+        messagebox.showinfo('About party_calc', text)
 
 
 def run():
