@@ -2,13 +2,13 @@
 
 __author__ = 'Boris Polyanskiy'
 
-from copy import copy
-from dataclasses import dataclass
+import copy
+import dataclasses
 import re
-from typing import List, Tuple
+import typing
 
 
-@dataclass
+@dataclasses.dataclass
 class Person:
     """Dataclass which describes each person's parameters"""
 
@@ -22,8 +22,8 @@ class Person:
     def calculate_payment(self, payment: float) -> float:
         """Calculate how much this person must to pay.
 
-        :param payment: how much each person must to pay
-        :return: how much this person must to pay
+        :param payment: how much EACH person must to pay
+        :return: how much THIS person must to pay
         """
         self.need_to_pay = float(payment - self.balance)
         return self.need_to_pay
@@ -31,20 +31,20 @@ class Person:
 
 class PartyCalculator:
     def __init__(self) -> None:
-        self._persons = []      # type: List[Person]
+        self._persons: typing.List[Person] = []
         self.each_pay = 0.0
 
     def __repr__(self) -> str:
         return f'Payment calculator with {len(self._persons)} persons and total payments {self.get_payments_sum()}'
 
     def __getitem__(self, item: int) -> Person:
-        return copy(self._persons[item])
+        return copy.copy(self._persons[item])
 
     @property
-    def persons(self) -> List[Person]:
+    def persons(self) -> typing.List[Person]:
         return [person for person in self]
 
-    def to_list(self) -> List[Tuple[str, float]]:
+    def to_list(self) -> typing.List[typing.Tuple[str, float]]:
         """Convert persons data to csv-compatible format
 
         :return: [(person.name, person.balance), (...)]
@@ -101,7 +101,7 @@ class PartyCalculator:
             raise ValueError(f"Person with name '{name}' doesn't exist!")
         self._persons.remove(self._get_person_by_name(name))
 
-    def get_names(self) -> List[str]:
+    def get_names(self) -> typing.List[str]:
         """Return list with persons names."""
         return [person.name for person in self._persons]
 

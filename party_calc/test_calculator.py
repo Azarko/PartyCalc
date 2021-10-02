@@ -4,7 +4,7 @@ __author__ = 'Boris Polyanskiy'
 
 import unittest
 
-from PartyCalc.calculator import Person, PartyCalculator
+from party_calc.calculator import Person, PartyCalculator
 
 
 class TestPerson(unittest.TestCase):
