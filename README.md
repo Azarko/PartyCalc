@@ -1,6 +1,6 @@
 # PartyCalc
 ## Description
-Utility to calculate party payments between members.
+Tool to calculate party payments between members.
 ## Requirements
 * python 3.6+
 ## Usage

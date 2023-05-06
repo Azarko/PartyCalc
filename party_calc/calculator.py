@@ -1,47 +1,30 @@
 """Api for working with party calculator."""
 
-__author__ = 'Boris Polyanskiy'
-
 import copy
-import dataclasses
 import re
 import typing
 
+from party_calc import models
 
-@dataclasses.dataclass
-class Person:
-    """Dataclass which describes each person's parameters"""
-
-    name: str
-    balance: float = 0.0
-    need_to_pay = 0.0
-
-    def __repr__(self) -> str:
-        return f'Person "{self.name}" with balance {self.balance}.'
-
-    def calculate_payment(self, payment: float) -> float:
-        """Calculate how much this person must to pay.
-
-        :param payment: how much EACH person must to pay
-        :return: how much THIS person must to pay
-        """
-        self.need_to_pay = float(payment - self.balance)
-        return self.need_to_pay
+PERSON_REGEX = re.compile(r'^person_(?P<index>\d{2})$')
 
 
 class PartyCalculator:
     def __init__(self) -> None:
-        self._persons: typing.List[Person] = []
+        self._persons: typing.List[models.Person] = []
         self.each_pay = 0.0
 
     def __repr__(self) -> str:
-        return f'Payment calculator with {len(self._persons)} persons and total payments {self.get_payments_sum()}'
+        return (
+            f'Payment calculator with {len(self._persons)} persons and total '
+            f'payments {self.get_payments_sum()}'
+        )
 
-    def __getitem__(self, item: int) -> Person:
+    def __getitem__(self, item: int) -> models.Person:
         return copy.copy(self._persons[item])
 
     @property
-    def persons(self) -> typing.List[Person]:
+    def persons(self) -> typing.List[models.Person]:
         return [person for person in self]
 
     def to_list(self) -> typing.List[typing.Tuple[str, float]]:
@@ -55,7 +38,7 @@ class PartyCalculator:
         """Return first available name for person"""
         counter = 1
         for person_name in sorted(self.get_names()):
-            found = re.search(r'^person_(?P<index>[\d]{2})$', person_name)
+            found = PERSON_REGEX.search(person_name)
             if found:
                 index = int(found.group(1))
                 if index != counter:
@@ -89,7 +72,7 @@ class PartyCalculator:
             raise ValueError('Name cannot be empty!')
         if self.is_person_exists(name):
             raise ValueError(f'Person with name "{name}" already exists!')
-        self._persons.append(Person(name=name, balance=balance))
+        self._persons.append(models.Person(name=name, balance=balance))
 
     def delete_person(self, name: str) -> None:
         """Delete person with name `name`.
@@ -110,7 +93,7 @@ class PartyCalculator:
         self._persons = []
         self.each_pay = 0.0
 
-    def _get_person_by_name(self, name: str) -> Person:
+    def _get_person_by_name(self, name: str) -> models.Person:
         """Return person object with selected name
 
         :param name: name of person
@@ -150,7 +133,9 @@ class PartyCalculator:
 
     def get_payments_sum(self) -> float:
         """Return total paid sum."""
-        return sum(person.balance for person in self._persons) if len(self._persons) else 0
+        if len(self._persons):
+            return sum(person.balance for person in self._persons)
+        return 0
 
     def calculate_payments(self) -> None:
         """Calculate how much each person must pay (or must receive)."""

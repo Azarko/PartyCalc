@@ -3,8 +3,6 @@ Party Calc GUI.
 App for calculate party payments.
 """
 
-__author__ = 'Boris Polyanskiy'
-
 import csv
 import os
 import tkinter as tk
