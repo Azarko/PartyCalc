@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-__author__ = 'Boris Polyanskiy'
-
 from party_calc import gui
 
 

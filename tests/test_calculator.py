@@ -1,10 +1,9 @@
 """Tests for calculator.py."""
 
-__author__ = 'Boris Polyanskiy'
-
 import unittest
 
-from party_calc.calculator import Person, PartyCalculator
+from party_calc.calculator import PartyCalculator
+from party_calc.models import Person
 
 
 class TestPerson(unittest.TestCase):
