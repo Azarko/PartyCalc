@@ -369,6 +369,7 @@ disable = [
     "logging-fstring-interpolation",
     "fixme",
     "too-many-arguments",
+    "too-many-instance-attributes",
 ]
 
 # Enable the message, report, category or checker with the given id(s). You can
