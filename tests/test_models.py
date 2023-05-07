@@ -10,6 +10,7 @@ def test_init():
     person = Person(name, balance)
     assert person.name == name
     assert person.balance == balance
+    assert name in repr(person)
 
 
 def test_calculate_payment():

@@ -10,6 +10,7 @@ PERSON_NAME_4 = 'test4'
 def test_init(calc):
     assert len(calc.persons) == 0
     assert calc.each_pay == 0
+    assert 'with 0 persons' in repr(calc)
 
 
 def test_select_name(calc):
@@ -45,7 +46,6 @@ def test_add_person(calc):
     assert calc.persons[1].balance == 15.0
     with pytest.raises(ValueError):
         calc.add_person(PERSON_NAME_1)
-        calc.add_person(PERSON_NAME_3)
     assert calc.persons[-1].name == PERSON_NAME_2
     calc.add_person(PERSON_NAME_4, 50)
     assert isinstance(calc.persons[-1].balance, float)
@@ -55,6 +55,10 @@ def test_add_person(calc):
     names = set(calc.get_names())
     assert 'person_01' in names
     assert 'person_02' in names
+    with pytest.raises(ValueError):
+        calc.add_person(balance='str')
+    with pytest.raises(ValueError):
+        calc.add_person(name='')
 
 
 def test_delete_person(calc):
@@ -122,6 +126,8 @@ def test_change_person_name(calc):
     assert calc.get_names() == [PERSON_NAME_1, PERSON_NAME_3]
     with pytest.raises(ValueError):
         calc.change_person_name(PERSON_NAME_1, PERSON_NAME_3)
+    with pytest.raises(ValueError):
+        calc.change_person_name(PERSON_NAME_1, '')
 
 
 def test_get_payments_sum(calc):
