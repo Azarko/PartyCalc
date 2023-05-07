@@ -38,7 +38,7 @@ class CalculatorFrame(tk.Frame):
         self.create_title_frame()
         self.create_total_frame()
 
-    def create_title_frame(self) -> None:
+    def create_title_frame(self):
         """Create header of the persons table"""
         frame = tk.Frame(self)
         name = tk.Entry(frame, width=self.name_width)
@@ -49,32 +49,74 @@ class CalculatorFrame(tk.Frame):
         paid.insert(0, 'Paid')
         paid['state'] = tk.DISABLED
         paid.pack(side=tk.LEFT)
-        tk.Label(frame, width=self.mp_width, text='Need to pay', state=tk.DISABLED).pack(side=tk.LEFT)
-        tk.Label(frame, width=self.del_width, text='Del', state=tk.DISABLED).pack(side=tk.LEFT)
+        tk.Label(
+            frame,
+            width=self.mp_width,
+            text='Need to pay',
+            state=tk.DISABLED,
+        ).pack(side=tk.LEFT)
+        tk.Label(
+            frame,
+            width=self.del_width,
+            text='Del',
+            state=tk.DISABLED,
+        ).pack(side=tk.LEFT)
         frame.pack(side=tk.TOP, anchor=tk.W)
 
-    def create_toolbar_frame(self) -> None:
+    def create_toolbar_frame(self):
         """Create the control toolbar on the top of the frame"""
         self.toolbar = tk.Frame(self)
-        self.calc_button = tk.Button(self.toolbar, text='Calculate', cursor='hand2', command=self.calculate,
-                                     state=tk.DISABLED)
+        self.calc_button = tk.Button(
+            self.toolbar,
+            text='Calculate',
+            cursor='hand2',
+            command=self.calculate,
+            state=tk.DISABLED,
+        )
         self.calc_button.pack(side=tk.LEFT)
-        tk.Button(self.toolbar, text='Add person', cursor='hand2', command=self.add_person).pack(side=tk.LEFT)
-        tk.Button(self.toolbar, text='Add N persons', cursor='hand2', command=self.add_n_persons).pack(side=tk.LEFT)
-        tk.Button(self.toolbar, text='Clear', cursor='hand2', command=self.reset_payments).pack(side=tk.LEFT)
-        tk.Button(self.toolbar, text='Reset all', cursor='hand2', command=self.reset).pack(side=tk.LEFT)
-        self.edit_button = tk.Button(self.toolbar, text='Edit', cursor='hand2', command=self.switch_edit_mode,
-                                     state=tk.DISABLED)
+        tk.Button(
+            self.toolbar,
+            text='Add person',
+            cursor='hand2',
+            command=self.add_person,
+        ).pack(side=tk.LEFT)
+        tk.Button(
+            self.toolbar,
+            text='Add N persons',
+            cursor='hand2',
+            command=self.add_n_persons,
+        ).pack(side=tk.LEFT)
+        tk.Button(
+            self.toolbar,
+            text='Clear',
+            cursor='hand2',
+            command=self.reset_payments,
+        ).pack(side=tk.LEFT)
+        tk.Button(
+            self.toolbar,
+            text='Reset all',
+            cursor='hand2',
+            command=self.reset,
+        ).pack(side=tk.LEFT)
+        self.edit_button = tk.Button(
+            self.toolbar,
+            text='Edit',
+            cursor='hand2',
+            command=self.switch_edit_mode,
+            state=tk.DISABLED,
+        )
         self.edit_button.pack(side=tk.LEFT)
         self.toolbar.pack(side=tk.TOP, fill=tk.X)
 
     def create_total_frame(self):
         """Create summary frame with results of calculation"""
         self.total_frame = tk.Frame(self)
-        tk.Label(self.total_frame, text='Each member must pay:').pack(side=tk.LEFT)
+        tk.Label(self.total_frame, text='Each member must pay:').pack(
+            side=tk.LEFT,
+        )
         tk.Label(self.total_frame, text='0.0').pack(side=tk.LEFT)
 
-    def _check_persons_limit(self, show_info=True) -> bool:
+    def _check_persons_limit(self, show_info: bool = True) -> bool:
         """Check if max_persons_count limit is reached
 
         If limit is reached - show warning (showinfo).
@@ -85,12 +127,13 @@ class CalculatorFrame(tk.Frame):
             if show_info:
                 messagebox.showinfo(
                     'Persons limit',
-                    f'Max count of persons ({self.max_persons_count}) is reached! Cannot add more!'
+                    f'Max count of persons ({self.max_persons_count}) is'
+                    ' reached! Cannot add more!',
                 )
             return True
         return False
 
-    def add_person(self, name=None, balance=0.0) -> None:
+    def add_person(self, name=None, balance=0.0):
         """Create and display new person"""
 
         def validate_float(string: str) -> bool:
@@ -108,46 +151,67 @@ class CalculatorFrame(tk.Frame):
 
         if self._check_persons_limit():
             return
-        person_name = name if name is not None else self.calculator.select_person_name()
+        person_name = (
+            name if name is not None else self.calculator.select_person_name()
+        )
         try:
             self.calculator.add_person(name=person_name, balance=balance)
         except ValueError as err:
-            messagebox.showerror('Error', err)
+            messagebox.showerror('Error', str(err))
             return
         frame = tk.Frame(self)
 
         name_var = tk.StringVar(value=person_name)
         name = tk.Entry(frame, width=self.name_width, textvariable=name_var)
-        name.bind("<FocusOut>", lambda x: self.edit_name_callback(name_var, frame))
-        name.bind("<Return>", lambda x: self.focus())
+        name.bind(
+            '<FocusOut>',
+            lambda x: self.edit_name_callback(name_var, frame),
+        )
+        name.bind('<Return>', lambda x: self.focus())
         name.pack(side=tk.LEFT)
 
-        paid = tk.Entry(frame, width=self.paid_width, validate="key")
-        paid.config(validatecommand=(paid.register(validate_float), "%P"))
-        paid.insert(0, balance)
+        paid = tk.Entry(frame, width=self.paid_width, validate='key')
+        paid.config(validatecommand=(paid.register(validate_float), '%P'))
+        paid.insert(0, str(balance))
         paid.pack(side=tk.LEFT)
 
-        tk.Label(frame, width=self.mp_width, text='N/A', bg=self.mp_label_color_def).pack(side=tk.LEFT)
-        tk.Button(frame, text='Del', command=lambda: self.delete_person(frame), width=self.del_width).pack(side=tk.LEFT)
+        tk.Label(
+            frame,
+            width=self.mp_width,
+            text='N/A',
+            bg=self.mp_label_color_def,
+        ).pack(side=tk.LEFT)
+        tk.Button(
+            frame,
+            text='Del',
+            command=lambda: self.delete_person(frame),
+            width=self.del_width,
+        ).pack(side=tk.LEFT)
         frame.pack(side=tk.TOP, anchor=tk.W)
         self._person_frames.append(frame)
         self.calc_button['state'] = tk.NORMAL
 
-    def edit_name_callback(self, string_var: tk.StringVar, frame: tk.Frame) -> None:
+    def edit_name_callback(
+        self,
+        string_var: tk.StringVar,
+        frame: tk.Frame,
+    ) -> None:
         """Callback for change person name (Entry)
 
         :param string_var: StringVar of Entry
         :param frame: parent frame
         :return: None
         """
-        person_name = self.calculator.persons[self._person_frames.index(frame)].name
+        person_name = self.calculator.persons[
+            self._person_frames.index(frame)
+        ].name
         try:
             self.calculator.change_person_name(person_name, string_var.get())
         except ValueError as err:
-            messagebox.showerror('Error', err)
+            messagebox.showerror('Error', str(err))
             string_var.set(person_name)
 
-    def add_n_persons(self) -> None:
+    def add_n_persons(self):
         """Create and display few persons"""
         if self._check_persons_limit():
             return
@@ -158,48 +222,65 @@ class CalculatorFrame(tk.Frame):
             self.update()
             return
         available_str = f'1-{available_count}' if available_count > 1 else '1'
-        n = simpledialog.askinteger('Enter count of persons', f'Count of new persons ({available_str})')
-        if n is None:
+        answer = simpledialog.askinteger(
+            'Enter count of persons',
+            f'Count of new persons ({available_str})',
+        )
+        if answer is None:
             return
-        elif n <= 0:
+        if answer <= 0:
             messagebox.showerror('Error!', 'Count must be positive integer!')
             return
-        elif n > self.max_persons_count:
-            messagebox.showerror('Error!', f'Count too big! Please input value between 1 and {self.max_persons_count}')
-            return
-        if len(self._person_frames) + n > self.max_persons_count:
-            n = available_count
-            messagebox.showinfo(
-                'Persons limit', f'Max count of persons is {self.max_persons_count}, {n} members will be added',
+        if answer > self.max_persons_count:
+            messagebox.showerror(
+                'Error!',
+                'Count too big! Please input value between 1 and'
+                f' {self.max_persons_count}',
             )
-        for count in range(n):
+            return
+        if len(self._person_frames) + answer > self.max_persons_count:
+            answer = available_count
+            messagebox.showinfo(
+                'Persons limit',
+                f'Max count of persons is {self.max_persons_count},'
+                f' {answer} members will be added',
+            )
+        for _ in range(answer):
             self.add_person()
             self.update()
 
-    def delete_person(self, frame) -> None:
+    def delete_person(self, frame):
         """Delete person and linked frame"""
-        self.calculator.delete_person(self.calculator[self._person_frames.index(frame)].name)
+        self.calculator.delete_person(
+            self.calculator[self._person_frames.index(frame)].name,
+        )
         self._person_frames.remove(frame)
         frame.pack_forget()
-        if not len(self._person_frames):
+        if not self._person_frames:
             self.calc_button['state'] = tk.DISABLED
         self.focus_set()
 
-    def reset(self) -> None:
+    def reset(self):
         """Reset all data"""
-        if messagebox.askyesno('Really reset', 'Do you really want to reset all data?'):
+        if messagebox.askyesno(
+            'Really reset',
+            'Do you really want to reset all data?',
+        ):
             self.calculator.reset()
             for frame in self._person_frames:
                 frame.pack_forget()
             self._person_frames = []
             self.calc_button['state'] = tk.DISABLED
 
-    def reset_payments(self) -> None:
+    def reset_payments(self):
         """Reset payments data"""
-        if messagebox.askyesno('Really reset', 'Do you really want to reset all payment information?'):
+        if messagebox.askyesno(
+            'Really reset',
+            'Do you really want to reset all payment information?',
+        ):
             for entry in self.get_pay_entries():
                 entry.delete(0, len(entry.get()))
-                entry.insert(0, 0.0)
+                entry.insert(0, '0.0')
             self.reset_mp_labels_color()
 
     def get_pay_entries(self) -> typing.List[tk.Entry]:
@@ -210,26 +291,32 @@ class CalculatorFrame(tk.Frame):
         """Return "must pay" entries of all person frames"""
         return [frame.winfo_children()[2] for frame in self._person_frames]
 
-    def reset_mp_labels_color(self) -> None:
+    def reset_mp_labels_color(self):
         """Reset color of "must pay" entries of all person frames"""
         for label in self.get_mp_labels():
             label['bg'] = self.mp_label_color_def
 
-    def update_calculator(self) -> None:
-        """Take data by pay entries and update paid info in PartyCalculator instance"""
+    def update_calculator(self):
+        """Take data by pay entries and update paid info"""
         for counter, pay_entry in enumerate(self.get_pay_entries()):
             try:
                 person_balance = float(pay_entry.get())
             except ValueError:
                 person_balance = 0.0
-            self.calculator.set_person_balance(self.calculator[counter].name, person_balance)
+            self.calculator.set_person_balance(
+                self.calculator[counter].name,
+                person_balance,
+            )
 
-    def calculate(self) -> None:
+    def calculate(self):
         """Calculate "must pay" for all persons"""
         self.update_calculator()
         self.calculator.calculate_payments()
-        for person, mp_label in zip(self.calculator, self.get_mp_labels()):
-            mp_label['text'] = '%.2f' % round(person.need_to_pay, 2)
+        for person, mp_label in zip(
+            self.calculator.persons,
+            self.get_mp_labels(),
+        ):
+            mp_label['text'] = f'{round(person.need_to_pay, 2):.2f}'
             if person.need_to_pay < 0:
                 mp_label['bg'] = self.mp_label_color_neg
             elif person.need_to_pay > 0:
@@ -238,10 +325,13 @@ class CalculatorFrame(tk.Frame):
                 mp_label['bg'] = self.mp_label_color_0
         self.switch_edit_mode()
 
-    def switch_edit_mode(self) -> None:
-        """Event handler to switch state of frame to enabled/disabled (edit/readonly mode)"""
+    def switch_edit_mode(self):
+        """Event handler to switch frame state to enabled/disabled"""
+
         def change_element(element):
-            element['state'] = tk.DISABLED if element['state'] == tk.NORMAL else tk.NORMAL
+            element['state'] = (
+                tk.DISABLED if element['state'] == tk.NORMAL else tk.NORMAL
+            )
 
         if not self.edit_mode_flag:
             self.reset_mp_labels_color()
@@ -254,25 +344,38 @@ class CalculatorFrame(tk.Frame):
         for element in self.toolbar.winfo_children():
             change_element(element)
         for frame in self._person_frames:
-            for element in frame.winfo_children()[0:2] + [frame.winfo_children()[3]]:
+            for element in frame.winfo_children()[0:2] + [
+                frame.winfo_children()[3],
+            ]:
                 change_element(element)
         self.edit_mode_flag = not self.edit_mode_flag
 
     def save_csv(self):
         """Save persons data to selected csv file"""
-        file_name = filedialog.asksaveasfilename(defaultextension='.csv', filetype=(('CSV files', '*.csv'),),
-                                      initialdir=os.getcwd())
+        file_name = filedialog.asksaveasfilename(
+            defaultextension='.csv',
+            filetypes=(('CSV files', '*.csv'),),
+            initialdir=os.getcwd(),
+        )
 
         if file_name:
             self.update_calculator()
-            with open(file_name, mode='w', encoding='utf-8', newline='') as stream:
+            with open(
+                file_name,
+                mode='w',
+                encoding='utf-8',
+                newline='',
+            ) as stream:
                 writer = csv.writer(stream)
                 writer.writerow(('person', 'balance'))
                 writer.writerows(self.calculator.to_list())
 
     def load_csv(self):
         """Load persons data from selected csv file"""
-        stream = filedialog.askopenfile(filetype=(('CSV files', '*.csv'),), initialdir=os.getcwd())
+        stream = filedialog.askopenfile(
+            filetypes=(('CSV files', '*.csv'),),
+            initialdir=os.getcwd(),
+        )
         if stream:
             reader = csv.reader(stream)
             data = [*reader]
@@ -285,8 +388,9 @@ class CalculatorFrame(tk.Frame):
                 if self._check_persons_limit(show_info=False):
                     messagebox.showinfo(
                         'Persons limit',
-                        f'Stop importing at line {counter + 1}: persons limit ({self.max_persons_count}) is reached\n'
-                        f'{len(data) - counter} line(s) ignored'
+                        f'Stop importing at line {counter + 1}: persons limit'
+                        f' ({self.max_persons_count}) is'
+                        f' reached\n{len(data) - counter} line(s) ignored',
                     )
                     break
                 self.add_person(name=row[0], balance=row[1])
@@ -295,7 +399,7 @@ class CalculatorFrame(tk.Frame):
 class CalculatorGUI(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
-        self.menu = None
+        self.menu: tk.Menu
         self.title('Party Calculator')
         self.resizable(width=False, height=False)
         self.calculator_frame = CalculatorFrame(self)
@@ -305,7 +409,10 @@ class CalculatorGUI(tk.Tk):
 
     def create_footer(self):
         toolbar = tk.Frame(self)
-        tk.Label(self, text='party_calc ver. %s' % party_calc.__version__).pack(side=tk.RIGHT)
+        tk.Label(
+            self,
+            text=f'party_calc ver. {party_calc.__version__}',
+        ).pack(side=tk.RIGHT)
         toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def create_menu(self):
@@ -316,8 +423,14 @@ class CalculatorGUI(tk.Tk):
 
     def create_menu_file(self):
         menu = tk.Menu(self.menu, tearoff=False)
-        menu.add_command(label='Export csv', command=self.calculator_frame.save_csv)
-        menu.add_command(label='Import csv', command=self.calculator_frame.load_csv)
+        menu.add_command(
+            label='Export csv',
+            command=self.calculator_frame.save_csv,
+        )
+        menu.add_command(
+            label='Import csv',
+            command=self.calculator_frame.load_csv,
+        )
         menu.add_separator()
         menu.add_command(label='Exit', command=self.quit)
         self.menu.add_cascade(label='File', underline=0, menu=menu)
@@ -343,11 +456,17 @@ class CalculatorGUI(tk.Tk):
         Press 'Reset all' for delete all members.
         Press 'Add N persons' for add few members at same time.
         '''
-        messagebox.showinfo('party_calc version %s' % party_calc.__version__, text)
+        messagebox.showinfo(
+            f'party_calc version {party_calc.__version__}',
+            text,
+        )
 
     @staticmethod
     def show_about():
-        text = 'party_calc ver. %s.\nApp for calculating party payments.' % party_calc.__version__
+        text = (
+            f'party_calc ver. {party_calc.__version__}.\n'
+            'App for calculating party payments.'
+        )
         messagebox.showinfo('About party_calc', text)
 
 
