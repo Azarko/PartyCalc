@@ -57,7 +57,7 @@ def test_add_person(calc):
     assert 'person_02' in names
 
 
-def test_delete_person(calc) -> None:
+def test_delete_person(calc):
     calc.add_person(PERSON_NAME_1)
     calc.add_person(PERSON_NAME_2)
     calc.add_person(PERSON_NAME_3, 10.0)
@@ -67,7 +67,7 @@ def test_delete_person(calc) -> None:
     assert PERSON_NAME_2 not in calc.get_names()
 
 
-def test_get_names(calc) -> None:
+def test_get_names(calc):
     assert not calc.get_names()
     names = [PERSON_NAME_1, PERSON_NAME_3, PERSON_NAME_2]
     for name in names:
@@ -75,28 +75,30 @@ def test_get_names(calc) -> None:
     assert calc.get_names() == names
 
 
-def test_reset(calc) -> None:
+def test_reset(calc):
     calc.add_person(PERSON_NAME_1, 10)
     assert len(calc.persons) == 1
     calc.reset()
     assert len(calc.persons) == 0
 
 
-def test_get_person_by_name(calc) -> None:
+def test_get_person_by_name(calc):
     params = (
-        (PERSON_NAME_1, 0.0), (PERSON_NAME_2, 10.0), (PERSON_NAME_3, 50.0),
+        (PERSON_NAME_1, 0.0),
+        (PERSON_NAME_2, 10.0),
+        (PERSON_NAME_3, 50.0),
     )
     for param in params:
         calc.add_person(*param)
     with pytest.raises(ValueError):
-        calc._get_person_by_name(PERSON_NAME_4)
+        calc.get_person_by_name(PERSON_NAME_4)
     for name, balance in params:
-        person = calc._get_person_by_name(name)
+        person = calc.get_person_by_name(name)
         assert person.name == name
         assert person.balance == balance
 
 
-def test_set_person_balance(calc) -> None:
+def test_set_person_balance(calc):
     calc.add_person(PERSON_NAME_1)
     calc.add_person(PERSON_NAME_2, 10.0)
     with pytest.raises(ValueError):
@@ -109,7 +111,7 @@ def test_set_person_balance(calc) -> None:
     assert calc.persons[1].balance == 7.0
 
 
-def test_change_person_name(calc) -> None:
+def test_change_person_name(calc):
     calc.add_person(PERSON_NAME_1)
     calc.add_person(PERSON_NAME_2)
     assert calc.get_names() == [PERSON_NAME_1, PERSON_NAME_2]
@@ -122,7 +124,7 @@ def test_change_person_name(calc) -> None:
         calc.change_person_name(PERSON_NAME_1, PERSON_NAME_3)
 
 
-def test_get_payments_sum(calc) -> None:
+def test_get_payments_sum(calc):
     assert calc.get_payments_sum() == 0.0
     calc.add_person(PERSON_NAME_1, 10.0)
     calc.add_person(PERSON_NAME_2, 20.0)
@@ -130,7 +132,7 @@ def test_get_payments_sum(calc) -> None:
     assert calc.get_payments_sum() == 35.0
 
 
-def test_calculate_payments(calc) -> None:
+def test_calculate_payments(calc):
     calc.add_person(PERSON_NAME_1, 30.0)
     calc.add_person(PERSON_NAME_2, 5.0)
     calc.add_person(PERSON_NAME_3, 25.0)

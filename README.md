@@ -19,7 +19,14 @@ party-calc
 ## Build windows .exe
 ```
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
+pip install pyinstaller
 build_win.bat
 ```
 Result file could be found in `./output` folder.
+
+## Run tests
+```
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+make test-all
+```

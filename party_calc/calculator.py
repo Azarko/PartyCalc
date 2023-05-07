@@ -10,7 +10,7 @@ PERSON_REGEX = re.compile(r'^person_(?P<index>\d{2})$')
 
 
 class PartyCalculator:
-    def __init__(self) -> None:
+    def __init__(self):
         self._persons: typing.List[models.Person] = []
         self.each_pay = 0.0
 
@@ -25,7 +25,7 @@ class PartyCalculator:
 
     @property
     def persons(self) -> typing.List[models.Person]:
-        return [person for person in self]
+        return self._persons.copy()
 
     def to_list(self) -> typing.List[typing.Tuple[str, float]]:
         """Convert persons data to csv-compatible format
@@ -55,7 +55,11 @@ class PartyCalculator:
         """
         return name in self.get_names()
 
-    def add_person(self, name: str = None, balance: float = 0.0) -> None:
+    def add_person(
+        self,
+        name: typing.Optional[str] = None,
+        balance: float = 0.0,
+    ) -> None:
         """Create and add new person.
 
         :param name: name of new person
@@ -66,8 +70,10 @@ class PartyCalculator:
             name = self.select_person_name()
         try:
             balance = float(balance)
-        except ValueError:
-            raise ValueError(f'Balance must me float, "{balance}" passed!') from None
+        except ValueError as err:
+            raise ValueError(
+                f'Balance must me float, "{balance}" passed!',
+            ) from err
         if not name:
             raise ValueError('Name cannot be empty!')
         if self.is_person_exists(name):
@@ -81,29 +87,28 @@ class PartyCalculator:
         :return: None
         """
         if not self.is_person_exists(name):
-            raise ValueError(f"Person with name '{name}' doesn't exist!")
-        self._persons.remove(self._get_person_by_name(name))
+            raise ValueError(f'Person with name "{name}" doesn\'t exist!')
+        self._persons.remove(self.get_person_by_name(name))
 
     def get_names(self) -> typing.List[str]:
         """Return list with persons names."""
         return [person.name for person in self._persons]
 
-    def reset(self) -> None:
+    def reset(self):
         """Reset all instance data"""
         self._persons = []
         self.each_pay = 0.0
 
-    def _get_person_by_name(self, name: str) -> models.Person:
+    def get_person_by_name(self, name: str) -> models.Person:
         """Return person object with selected name
 
         :param name: name of person
         :return: Person object
         """
-        if not self.is_person_exists(name):
-            raise ValueError(f"Person with name '{name}' doesn't exist!")
         for person in self._persons:
             if person.name == name:
                 return person
+        raise ValueError(f'Person with name "{name}" doesn\'t exist!')
 
     def set_person_balance(self, name: str, balance: float) -> None:
         """Change balance of person with name `name` to `balance`
@@ -112,7 +117,7 @@ class PartyCalculator:
         :param balance: new balance
         :return: None
         """
-        person = self._get_person_by_name(name)
+        person = self.get_person_by_name(name)
         person.balance = balance
 
     def change_person_name(self, name: str, new_name: str) -> None:
@@ -124,7 +129,7 @@ class PartyCalculator:
         """
         if not new_name:
             raise ValueError('Name cannot be empty!')
-        person = self._get_person_by_name(name)
+        person = self.get_person_by_name(name)
         if new_name == name:
             return
         if self.is_person_exists(new_name):
@@ -133,11 +138,11 @@ class PartyCalculator:
 
     def get_payments_sum(self) -> float:
         """Return total paid sum."""
-        if len(self._persons):
+        if self._persons:
             return sum(person.balance for person in self._persons)
         return 0
 
-    def calculate_payments(self) -> None:
+    def calculate_payments(self):
         """Calculate how much each person must pay (or must receive)."""
         total_paid = self.get_payments_sum()
         each_pay = total_paid / len(self._persons)
