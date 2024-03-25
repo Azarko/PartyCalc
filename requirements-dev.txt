@@ -15,5 +15,5 @@ flake8-multiline-containers
 flake8-pylint
 flake8-return
 pep8-naming
-black==22.6.0
+black==24.3.0
 mypy
